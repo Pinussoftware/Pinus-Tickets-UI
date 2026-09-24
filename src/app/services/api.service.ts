@@ -58,5 +58,17 @@ export class ApiService {
 
   // ── Users ─────────────────────────────────────────────────────────────────
   getUsers()               { return this.http.get<UserModel[]>(`${this.base}/users`); }
-  createUser(body: any)    { return this.http.post<UserModel>(`${this.base}/users`, body); }
+  createUser(body: any) { return this.http.post<UserModel>(`${this.base}/users`, body); }
+
+  // ── Assignment ────────────────────────────────────────────────────────────
+  getUnassignedQueue()  { return this.http.get<any[]>(`${this.base}/assignments/queue`); }
+  getEngineerWorkload() { return this.http.get<any[]>(`${this.base}/assignments/workload`); }
+
+  // ── Notifications ─────────────────────────────────────────────────────────
+  getNotifications(filters: any = {}) {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([k, v]) => { if (v) params = params.set(k, String(v)); });
+    return this.http.get<any[]>(`${this.base}/notifications`, { params });
+  }
+  getNotificationStats() { return this.http.get<any>(`${this.base}/notifications/stats`); }
 }

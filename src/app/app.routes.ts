@@ -14,10 +14,12 @@ export const routes: Routes = [
       { path: 'tickets/:id',  loadComponent: () => import('./pages/tickets/ticket-detail.component').then(m => m.TicketDetailComponent) },
       { path: 'workbench',    loadComponent: () => import('./pages/workbench/workbench.component').then(m => m.WorkbenchComponent) },
       { path: 'qa-queue',     loadComponent: () => import('./pages/qa-queue/qa-queue.component').then(m => m.QaQueueComponent) },
-      { path: 'customers',    loadComponent: () => import('./pages/customers/customers.component').then(m => m.CustomersComponent) },
+      { path: 'assignment',    loadComponent: () => import('./pages/assignment/assignment.component').then(m => m.AssignmentComponent) },
+      { path: 'customers',     loadComponent: () => import('./pages/customers/customers.component').then(m => m.CustomersComponent) },
       { path: 'applications', loadComponent: () => import('./pages/applications/applications.component').then(m => m.ApplicationsComponent) },
       { path: 'contracts',    loadComponent: () => import('./pages/contracts/contracts.component').then(m => m.ContractsComponent) },
       { path: 'reports',      loadComponent: () => import('./pages/reports/reports.component').then(m => m.ReportsComponent) },
+      { path: 'notifications',loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent) },
       { path: 'users',        loadComponent: () => import('./pages/users/users.component').then(m => m.UsersComponent) },
     ]
   },

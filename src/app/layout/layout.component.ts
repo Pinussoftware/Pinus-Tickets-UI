@@ -48,6 +48,9 @@ import { filter } from 'rxjs/operators';
 
       <div class="nav-section">
         <span class="nav-label" *ngIf="!collapsed">MANAGEMENT</span>
+        <a routerLink="/assignment"   routerLinkActive="active" class="nav-item" title="Assignment">
+          <span class="nav-icon">🎯</span><span class="nav-text" *ngIf="!collapsed">Assignment</span>
+        </a>
         <a routerLink="/customers"    routerLinkActive="active" class="nav-item" title="Customers">
           <span class="nav-icon">🏢</span><span class="nav-text" *ngIf="!collapsed">Customers</span>
         </a>
@@ -59,6 +62,9 @@ import { filter } from 'rxjs/operators';
         </a>
         <a routerLink="/reports" routerLinkActive="active" class="nav-item" title="Reports">
           <span class="nav-icon">📈</span><span class="nav-text" *ngIf="!collapsed">Reports</span>
+        </a>
+        <a routerLink="/notifications" routerLinkActive="active" class="nav-item" title="Notifications">
+          <span class="nav-icon">📬</span><span class="nav-text" *ngIf="!collapsed">Notifications</span>
         </a>
       </div>
 
@@ -222,6 +228,8 @@ export class LayoutComponent implements OnInit {
         url.includes('/customers')    ? 'Customers' :
         url.includes('/applications') ? 'Applications' :
         url.includes('/contracts')    ? 'Contracts & SLA' :
+        url.includes('/assignment')   ? 'Ticket Assignment' :
+        url.includes('/notifications') ? 'Notifications' :
         url.includes('/reports')      ? 'Reports' :
         url.includes('/users')        ? 'User Management' : 'Dashboard';
     });
