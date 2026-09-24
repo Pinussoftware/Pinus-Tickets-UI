@@ -13,7 +13,7 @@ import { AuthService } from '../../services/auth.service';
   <div class="login-card">
 
     <!-- Logo -->
-    <img src="assets/pinus-logo.png" alt="Pinus Software" class="login-logo" />
+    <img src="assets/logo1.png" alt="Pinus Software" class="login-logo" />
 
     <!-- Heading -->
     <h1 class="login-heading">TICKET SYSTEM</h1>
@@ -151,11 +151,11 @@ import { AuthService } from '../../services/auth.service';
 
 /* ── Logo ─────────────────────────────────────────────── */
 .login-logo {
-  width: 220px;
-  max-width: 80%;
+  width: 320px;
+  max-width: 88%;
   height: auto;
   object-fit: contain;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 /* ── Headings ─────────────────────────────────────────── */
@@ -320,7 +320,7 @@ import { AuthService } from '../../services/auth.service';
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 480px) {
   .login-card { padding: 36px 24px 28px; border-radius: 18px; }
-  .login-logo  { width: 190px; }
+  .login-logo  { width: 260px; }
   .login-heading { font-size: 19px; }
   .btn-login { font-size: 15px; min-height: 50px; }
 }

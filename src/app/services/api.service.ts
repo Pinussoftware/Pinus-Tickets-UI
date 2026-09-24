@@ -46,8 +46,9 @@ export class ApiService {
   }
 
   // ── Customers ─────────────────────────────────────────────────────────────
-  getCustomers()              { return this.http.get<Customer[]>(`${this.base}/customers`); }
-  createCustomer(body: any)   { return this.http.post<Customer>(`${this.base}/customers`, body); }
+  getCustomers()            { return this.http.get<Customer[]>(`${this.base}/customers`); }
+  createCustomer(body: any) { return this.http.post<Customer>(`${this.base}/customers`, body); }
+  updateCustomer(id: number, body: any) { return this.http.patch<Customer>(`${this.base}/customers/${id}`, body); }
 
   // ── Applications ──────────────────────────────────────────────────────────
   getApplications(customerId?: number) {

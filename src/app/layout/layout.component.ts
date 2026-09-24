@@ -13,7 +13,7 @@ import { filter } from 'rxjs/operators';
   <!-- Sidebar -->
   <aside class="sidebar" [class.collapsed]="collapsed">
     <div class="brand">
-      <img src="assets/pinus-logo.png" alt="Pinus" class="brand-logo" *ngIf="!collapsed" />
+      <img src="assets/logo1.png" alt="Pinus" class="brand-logo" *ngIf="!collapsed" />
       <span class="brand-icon" *ngIf="collapsed">🎫</span>
       <button class="collapse-btn" (click)="collapsed=!collapsed">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -143,7 +143,7 @@ import { filter } from 'rxjs/operators';
 
 .brand { padding:16px 14px; display:flex; align-items:center; justify-content:space-between;
   border-bottom:1px solid rgba(255,255,255,.08); min-height:64px; }
-.brand-logo { height:32px; object-fit:contain; filter:brightness(0) invert(1); opacity:.9; }
+.brand-logo { height:48px; object-fit:contain; background:#fff; border-radius:8px; padding:5px 12px; }
 .brand-icon { font-size:22px; }
 .collapse-btn { background:none; border:none; cursor:pointer; color:#8392ab; padding:4px;
   border-radius:6px; display:flex; align-items:center; flex-shrink:0; }

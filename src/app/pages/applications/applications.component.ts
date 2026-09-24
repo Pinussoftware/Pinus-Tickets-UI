@@ -559,9 +559,15 @@ export class ApplicationsComponent implements OnInit {
   }
 
   openEdit(a: any) {
-    this.form = { ...this.emptyForm(), ...a,
+    this.form = {
+      name: a.name, customerId: a.customerId, status: a.status || 'active',
+      version: a.version || '', technology: a.technology || '',
+      database: a.databaseTech || '', description: a.description || '',
+      supportTeam: a.supportTeam || '', deploymentType: a.deploymentType || '',
+      slaPriority: a.slaPriority || 'Standard', deploymentNotes: a.notes || '',
       environments: a.environments?.length ? a.environments :
-        [{ type: 'Production', url: '', server: '', version: '' }] };
+        [{ type: 'Production', url: '', server: '', version: '' }]
+    };
     this.editing = true; this.editId = a.id; this.errorMsg = ''; this.showForm = true;
   }
 
@@ -575,8 +581,14 @@ export class ApplicationsComponent implements OnInit {
       this.errorMsg = 'Name and Customer are required.'; return;
     }
     this.saving = true; this.errorMsg = '';
-    const payload = { name: this.form.name, customerId: +this.form.customerId,
-      version: this.form.version, technology: this.form.technology };
+    const payload = {
+      name: this.form.name, customerId: +this.form.customerId,
+      version: this.form.version, technology: this.form.technology,
+      status: this.form.status, description: this.form.description,
+      databaseTech: this.form.database, deploymentType: this.form.deploymentType,
+      supportTeam: this.form.supportTeam, slaPriority: this.form.slaPriority,
+      notes: this.form.deploymentNotes
+    };
     const obs = this.editing
       ? this.http.patch(`${environment.apiUrl}/applications/${this.editId}`, payload)
       : this.api.createApplication(payload);

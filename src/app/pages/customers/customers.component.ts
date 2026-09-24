@@ -95,8 +95,8 @@ import { Customer, AppModel } from '../../models/models';
           <td><span class="plan-badge standard">Standard</span></td>
           <td><span class="status-pill" [ngClass]="c.status">{{ c.status }}</span></td>
           <td class="actions-cell">
-            <button class="act-btn edit" (click)="openEdit(c)" title="Edit">✏</button>
-            <button class="act-btn view" (click)="openEdit(c)" title="View Details">👁</button>
+            <button class="act-btn edit" (click)="edit(c)" title="Edit">✏</button>
+            <button class="act-btn view" (click)="edit(c)" title="View Details">👁</button>
           </td>
         </tr>
         <tr *ngIf="filtered.length === 0">
@@ -535,8 +535,23 @@ export class CustomersComponent implements OnInit {
     this.showForm = true;
   }
 
-  openEdit(c: any) {
-    this.form = { ...this.emptyForm(), ...c };
+  edit(c: any) {
+    this.form = {
+      name: c.name, accountCode: c.accountCode,
+      industry: c.industry || '', contactPerson: c.contactPerson || '',
+      phone: c.phone || '', email: c.email || '', website: c.website || '',
+      gstin: c.gstin || '', taxNo: c.taxNo || '', slaPlan: c.slaPlan || 'Standard',
+      status: c.status || 'active', since: c.sinceYear || '',
+      address: c.address || '', city: c.city || '', state: c.state || '',
+      pincode: c.pincode || '', country: c.country || 'India',
+      bankName: c.bankName || '', branchName: c.branchName || '',
+      accountName: c.accountName || '', accountNumber: c.accountNumber || '',
+      accountType: c.accountType || '', ifscCode: c.ifscCode || '',
+      swiftCode: c.swiftCode || '', micrCode: c.micrCode || '', upiId: c.upiId || '',
+      supportEmail: c.supportEmail || '', escalationContact: c.escalationContact || '',
+      timezone: c.timezone || '', businessHours: c.businessHours || '',
+      maxTicketsPerMonth: c.maxTicketsPerMonth || '', notes: c.notes || ''
+    };
     this.editing = true; this.editId = c.id;
     this.errorMsg = ''; this.activeTab = 'General';
     this.showForm = true;
@@ -549,9 +564,25 @@ export class CustomersComponent implements OnInit {
       this.errorMsg = 'Customer Name and Account Code are required.'; return;
     }
     this.saving = true; this.errorMsg = '';
-    const payload = { name: this.form.name, accountCode: this.form.accountCode, organizationId: 1 };
+    const payload = {
+      name: this.form.name, accountCode: this.form.accountCode, organizationId: 1,
+      industry: this.form.industry, contactPerson: this.form.contactPerson,
+      phone: this.form.phone, email: this.form.email, website: this.form.website,
+      gstin: this.form.gstin, taxNo: this.form.taxNo, slaPlan: this.form.slaPlan,
+      status: this.form.status, sinceYear: this.form.since,
+      address: this.form.address, city: this.form.city, state: this.form.state,
+      pincode: this.form.pincode, country: this.form.country,
+      bankName: this.form.bankName, branchName: this.form.branchName,
+      accountName: this.form.accountName, accountNumber: this.form.accountNumber,
+      accountType: this.form.accountType, ifscCode: this.form.ifscCode,
+      swiftCode: this.form.swiftCode, micrCode: this.form.micrCode, upiId: this.form.upiId,
+      supportEmail: this.form.supportEmail, escalationContact: this.form.escalationContact,
+      timezone: this.form.timezone, businessHours: this.form.businessHours,
+      maxTicketsPerMonth: this.form.maxTicketsPerMonth ? +this.form.maxTicketsPerMonth : null,
+      notes: this.form.notes
+    };
     const obs = this.editing
-      ? this.api.createCustomer(payload)   // reuse create — extend API later for update
+      ? this.api.updateCustomer(this.editId, payload)
       : this.api.createCustomer(payload);
     obs.subscribe({
       next: () => { this.saving = false; this.showForm = false; this.api.getCustomers().subscribe(c => { this.customers = c; this.applySearch(); }); },
