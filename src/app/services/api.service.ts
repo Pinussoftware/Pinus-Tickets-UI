@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import {
-  TicketListItem, TicketDetail, Customer, AppModel,
-  UserModel, DashboardStats
-} from '../models/models';
+import { DashboardStats } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -12,11 +9,11 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  // ── Auth ─────────────────────────────────────────────────────────────────
-  login(body: any)   { return this.http.post<any>(`${this.base}/auth/login`, body); }
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  login(body: any) { return this.http.post<any>(`${this.base}/auth/login`, body); }
 
   // ── Dashboard ─────────────────────────────────────────────────────────────
-  getDashboard()     { return this.http.get<DashboardStats>(`${this.base}/tickets/dashboard`); }
+  getDashboard() { return this.http.get<DashboardStats>(`${this.base}/tickets/dashboard`); }
 
   // ── Tickets ───────────────────────────────────────────────────────────────
   getTickets(filters: any = {}) {
@@ -24,42 +21,44 @@ export class ApiService {
     Object.entries(filters).forEach(([k, v]) => {
       if (v !== null && v !== undefined && v !== '') params = params.set(k, String(v));
     });
-    return this.http.get<TicketListItem[]>(`${this.base}/tickets`, { params });
+    return this.http.get<any[]>(`${this.base}/tickets`, { params });
   }
-
-  getTicket(id: number)         { return this.http.get<TicketDetail>(`${this.base}/tickets/${id}`); }
-  createTicket(body: any)       { return this.http.post<TicketDetail>(`${this.base}/tickets`, body); }
-  transitionTicket(id: number, body: any) {
-    return this.http.post<TicketDetail>(`${this.base}/tickets/${id}/transition`, body);
-  }
-  assignTicket(id: number, body: any) {
-    return this.http.post<TicketDetail>(`${this.base}/tickets/${id}/assign`, body);
-  }
-  addComment(id: number, body: any) {
-    return this.http.post<any>(`${this.base}/tickets/${id}/comments`, body);
-  }
-  addTimeEntry(id: number, body: any) {
-    return this.http.post<any>(`${this.base}/tickets/${id}/time-entries`, body);
-  }
-  addTestResult(id: number, body: any) {
-    return this.http.post<any>(`${this.base}/tickets/${id}/test-results`, body);
-  }
+  getTicket(id: number)               { return this.http.get<any>(`${this.base}/tickets/${id}`); }
+  createTicket(body: any)             { return this.http.post<any>(`${this.base}/tickets`, body); }
+  transitionTicket(id: number, body: any) { return this.http.post<any>(`${this.base}/tickets/${id}/transition`, body); }
+  assignTicket(id: number, body: any)     { return this.http.post<any>(`${this.base}/tickets/${id}/assign`, body); }
+  addComment(id: number, body: any)       { return this.http.post<any>(`${this.base}/tickets/${id}/comments`, body); }
+  addTimeEntry(id: number, body: any)     { return this.http.post<any>(`${this.base}/tickets/${id}/time-entries`, body); }
+  addTestResult(id: number, body: any)    { return this.http.post<any>(`${this.base}/tickets/${id}/test-results`, body); }
 
   // ── Customers ─────────────────────────────────────────────────────────────
-  getCustomers()            { return this.http.get<Customer[]>(`${this.base}/customers`); }
-  createCustomer(body: any) { return this.http.post<Customer>(`${this.base}/customers`, body); }
-  updateCustomer(id: number, body: any) { return this.http.patch<Customer>(`${this.base}/customers/${id}`, body); }
+  getCustomers()                           { return this.http.get<any[]>(`${this.base}/customers`); }
+  createCustomer(body: any)               { return this.http.post<any>(`${this.base}/customers`, body); }
+  updateCustomer(id: number, body: any)   { return this.http.patch<any>(`${this.base}/customers/${id}`, body); }
 
   // ── Applications ──────────────────────────────────────────────────────────
   getApplications(customerId?: number) {
     const params = customerId ? { params: new HttpParams().set('customerId', customerId) } : {};
-    return this.http.get<AppModel[]>(`${this.base}/applications`, params);
+    return this.http.get<any[]>(`${this.base}/applications`, params);
   }
-  createApplication(body: any) { return this.http.post<AppModel>(`${this.base}/applications`, body); }
+  createApplication(body: any)             { return this.http.post<any>(`${this.base}/applications`, body); }
+  updateApplication(id: number, body: any) { return this.http.patch<any>(`${this.base}/applications/${id}`, body); }
+  setApplicationStatus(id: number, body: any) { return this.http.patch<any>(`${this.base}/applications/${id}/status`, body); }
+
+  // ── Contracts ─────────────────────────────────────────────────────────────
+  getContracts(customerId?: number) {
+    const params = customerId ? { params: new HttpParams().set('customerId', customerId) } : {};
+    return this.http.get<any[]>(`${this.base}/contracts`, params);
+  }
+  createContract(body: any)               { return this.http.post<any>(`${this.base}/contracts`, body); }
+  updateContract(id: number, body: any)   { return this.http.patch<any>(`${this.base}/contracts/${id}`, body); }
+  deleteContract(id: number)              { return this.http.delete<any>(`${this.base}/contracts/${id}`); }
 
   // ── Users ─────────────────────────────────────────────────────────────────
-  getUsers()               { return this.http.get<UserModel[]>(`${this.base}/users`); }
-  createUser(body: any) { return this.http.post<UserModel>(`${this.base}/users`, body); }
+  getUsers()                              { return this.http.get<any[]>(`${this.base}/users`); }
+  createUser(body: any)                   { return this.http.post<any>(`${this.base}/users`, body); }
+  updateUser(id: number, body: any)       { return this.http.patch<any>(`${this.base}/users/${id}`, body); }
+  deactivateUser(id: number)             { return this.http.delete<any>(`${this.base}/users/${id}`); }
 
   // ── Assignment ────────────────────────────────────────────────────────────
   getUnassignedQueue()  { return this.http.get<any[]>(`${this.base}/assignments/queue`); }

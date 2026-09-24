@@ -3,9 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
-import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-applications',
@@ -492,7 +490,7 @@ export class ApplicationsComponent implements OnInit {
 
   form: any = this.emptyForm();
 
-  constructor(private api: ApiService, private http: HttpClient, private auth: AuthService) {}
+  constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit() {
     this.api.getCustomers().subscribe(c => this.customers = c);
@@ -590,7 +588,7 @@ export class ApplicationsComponent implements OnInit {
       notes: this.form.deploymentNotes
     };
     const obs = this.editing
-      ? this.http.patch(`${environment.apiUrl}/applications/${this.editId}`, payload)
+      ? this.api.updateApplication(this.editId, payload)
       : this.api.createApplication(payload);
     obs.subscribe({
       next: () => { this.saving = false; this.showForm = false; this.loadApps(); },
@@ -600,7 +598,7 @@ export class ApplicationsComponent implements OnInit {
 
   toggleStatus(a: any) {
     const newStatus = a.status === 'active' ? 'inactive' : 'active';
-    this.http.patch(`${environment.apiUrl}/applications/${a.id}/status`, { status: newStatus })
+    this.api.setApplicationStatus(a.id, { status: newStatus })
       .subscribe(() => { a.status = newStatus; });
   }
 }

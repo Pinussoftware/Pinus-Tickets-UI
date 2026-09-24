@@ -2,8 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-contracts',
@@ -210,7 +208,7 @@ export class ContractsComponent implements OnInit {
   contracts: any[] = [];
   form: any = this.emptyForm();
 
-  constructor(private api: ApiService, private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
   ngOnInit() {
     this.api.getCustomers().subscribe(c => this.customers = c);
@@ -224,7 +222,7 @@ export class ContractsComponent implements OnInit {
   }
 
   load() {
-    this.http.get<any[]>(`${environment.apiUrl}/contracts`).subscribe(c => this.contracts = c);
+    this.api.getContracts().subscribe(c => this.contracts = c);
   }
 
   get filteredContracts() {
@@ -265,8 +263,8 @@ export class ContractsComponent implements OnInit {
       responseHoursLow: +this.form.responseHoursLow
     };
     const obs = this.editing
-      ? this.http.patch<any>(`${environment.apiUrl}/contracts/${this.editId}`, payload)
-      : this.http.post<any>(`${environment.apiUrl}/contracts`, payload);
+      ? this.api.updateContract(this.editId, payload)
+      : this.api.createContract(payload);
     obs.subscribe({
       next: () => { this.saving = false; this.showForm = false; this.load(); },
       error: (e:any) => { this.saving = false; this.error = e?.error?.message || 'Save failed.'; }
@@ -275,8 +273,8 @@ export class ContractsComponent implements OnInit {
 
   delete(c: any) {
     if (!confirm(`Delete contract ${c.contractNumber}?`)) return;
-    this.http.delete(`${environment.apiUrl}/contracts/${c.id}`)
-      .subscribe(() => this.contracts = this.contracts.filter(x => x.id !== c.id));
+    this.api.deleteContract(c.id)
+      .subscribe(() => this.contracts = this.contracts.filter((x:any) => x.id !== c.id));
   }
 
   isExpiring(end: string) {

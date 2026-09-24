@@ -2,8 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 
 const ROLES = ['Admin','SupportManager','SupportExecutive','Developer','QA','CustomerAdmin','CustomerUser'];
 
@@ -179,7 +177,7 @@ export class UsersComponent implements OnInit {
     { role:'CustomerUser', desc:'Raise & track tickets' },
   ];
 
-  constructor(private api: ApiService, private http: HttpClient) {}
+  constructor(private api: ApiService) {}
   ngOnInit() { this.load(); }
 
   load() {
@@ -213,7 +211,7 @@ export class UsersComponent implements OnInit {
     if (!this.editing && !this.form.password?.trim()) { this.error = 'Password is required for new users.'; return; }
     this.saving = true; this.error = '';
     const obs = this.editing
-      ? this.http.patch<any>(`${environment.apiUrl}/users/${this.editId}`, {
+      ? this.api.updateUser(this.editId, {
           name: this.form.name, role: this.form.role, phone: this.form.phone || null,
           status: this.form.status, password: this.form.password || null })
       : this.api.createUser({ name: this.form.name, email: this.form.email,
@@ -226,7 +224,7 @@ export class UsersComponent implements OnInit {
 
   toggleStatus(u: any) {
     const s = u.status === 'active' ? 'inactive' : 'active';
-    this.http.patch<any>(`${environment.apiUrl}/users/${u.id}`, { status: s })
+    this.api.updateUser(u.id, { status: s })
       .subscribe(() => { u.status = s; this.applyFilter(); });
   }
 }
