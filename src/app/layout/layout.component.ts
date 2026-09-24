@@ -48,8 +48,11 @@ import { filter } from 'rxjs/operators';
 
       <div class="nav-section">
         <span class="nav-label" *ngIf="!collapsed">MANAGEMENT</span>
-        <a routerLink="/customers" routerLinkActive="active" class="nav-item" title="Customers">
+        <a routerLink="/customers"    routerLinkActive="active" class="nav-item" title="Customers">
           <span class="nav-icon">🏢</span><span class="nav-text" *ngIf="!collapsed">Customers</span>
+        </a>
+        <a routerLink="/applications" routerLinkActive="active" class="nav-item" title="Applications">
+          <span class="nav-icon">💻</span><span class="nav-text" *ngIf="!collapsed">Applications</span>
         </a>
         <a routerLink="/contracts" routerLinkActive="active" class="nav-item" title="Contracts & SLA">
           <span class="nav-icon">📋</span><span class="nav-text" *ngIf="!collapsed">Contracts & SLA</span>
@@ -217,6 +220,7 @@ export class LayoutComponent implements OnInit {
         url.includes('/workbench')    ? 'My Workbench' :
         url.includes('/qa-queue')     ? 'QA Queue' :
         url.includes('/customers')    ? 'Customers' :
+        url.includes('/applications') ? 'Applications' :
         url.includes('/contracts')    ? 'Contracts & SLA' :
         url.includes('/reports')      ? 'Reports' :
         url.includes('/users')        ? 'User Management' : 'Dashboard';

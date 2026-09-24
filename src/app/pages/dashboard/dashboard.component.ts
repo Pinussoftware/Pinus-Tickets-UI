@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { DashboardStats, TicketListItem } from '../../models/models';
 
 @Component({
@@ -10,6 +11,11 @@ import { DashboardStats, TicketListItem } from '../../models/models';
   imports: [CommonModule, RouterLink],
   template: `
 <div class="page">
+  <!-- Security scope banner for customer roles -->
+  <div class="scope-banner" *ngIf="isCustomerRole">
+    🔒 Showing data for <strong>{{ user?.organizationName }}</strong> only
+  </div>
+
   <!-- KPI Row -->
   <div class="kpi-grid">
     <div class="kpi open">
@@ -154,6 +160,12 @@ import { DashboardStats, TicketListItem } from '../../models/models';
   styles: [`
 .page { padding:24px 28px; max-width:1400px; margin:0 auto; }
 
+/* Scope banner */
+.scope-banner { background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8;
+  border-radius:10px; padding:10px 16px; font-size:13px; margin-bottom:18px;
+  display:flex; align-items:center; gap:8px; }
+.scope-banner strong { color:#1e3a8a; }
+
 /* KPIs */
 .kpi-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:22px; }
 .kpi { background:#fff; border-radius:14px; padding:18px 16px; border:1px solid #e2e8f0;
@@ -243,7 +255,10 @@ export class DashboardComponent implements OnInit {
   priorities: any[] = [];
   statusItems: any[] = [];
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private auth: AuthService) {}
+
+  get user()           { return this.auth.currentUser; }
+  get isCustomerRole() { return ['CustomerAdmin','CustomerUser'].includes(this.auth.role); }
 
   ngOnInit() {
     this.api.getDashboard().subscribe(s => {
