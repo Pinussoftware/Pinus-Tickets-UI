@@ -64,6 +64,10 @@ export class ApiService {
   getUnassignedQueue()  { return this.http.get<any[]>(`${this.base}/assignments/queue`); }
   getEngineerWorkload() { return this.http.get<any[]>(`${this.base}/assignments/workload`); }
 
+  // ── HRMS Integration ──────────────────────────────────────────────────────
+  getHrmsEmployees()    { return this.http.get<any[]>(`${this.base}/hrms/employees`); }
+  syncHrmsEmployees()   { return this.http.post<any>(`${this.base}/hrms/sync`, {}); }
+
   // ── Notifications ─────────────────────────────────────────────────────────
   getNotifications(filters: any = {}) {
     let params = new HttpParams();
