@@ -37,10 +37,12 @@ import { Customer, AppModel, PRIORITIES, TYPES } from '../../models/models';
         <div class="row-3">
           <div class="field">
             <label>Customer <span class="req">*</span></label>
-            <select [(ngModel)]="form.customerId" name="customerId" required (change)="loadApps()">
+            <select [(ngModel)]="form.customerId" name="customerId" required (change)="loadApps(); error=''"
+                    [class.field-error]="error && !form.customerId">
               <option value="">— Select customer —</option>
               <option *ngFor="let c of customers" [value]="c.id">{{ c.name }}</option>
             </select>
+            <span class="field-err-msg" *ngIf="error && !form.customerId">{{ error }}</span>
           </div>
           <div class="field">
             <label>Application</label>
@@ -218,6 +220,8 @@ h1 { font-size:22px; font-weight:700; color:#1e293b; margin:0; }
   font-family:inherit; color:#1e293b; background:#fff; resize:vertical; transition:border .2s; }
 .field input:focus, .field select:focus, .field textarea:focus {
   outline:none; border-color:#8392ab; box-shadow:0 0 0 3px rgba(131,146,171,.12); }
+.field-error { border-color:#ef4444 !important; }
+.field-err-msg { color:#ef4444; font-size:11.5px; margin-top:4px; }
 .subj-input { font-size:15px !important; font-weight:500 !important; }
 .sla-preview { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;
   padding:10px 14px; font-size:13px; color:#15803d; display:flex; align-items:center; gap:8px; margin-top:14px; }
@@ -283,8 +287,14 @@ export class TicketCreateComponent implements OnInit {
   }
 
   submit() {
-    if (!this.form.customerId || !this.form.subject || !this.form.description)
-      return void (this.error = 'Customer, Subject and Description are required.');
+    if (!this.form.customerId || !this.form.subject?.trim() || !this.form.description?.trim()) {
+      this.error = !this.form.customerId
+        ? 'Please select a Customer.'
+        : !this.form.subject?.trim()
+          ? 'Subject is required.'
+          : 'Description is required.';
+      return;
+    }
     this.loading = true; this.error = '';
     const payload = { ...this.form, customerId:+this.form.customerId,
       applicationId: this.form.applicationId ? +this.form.applicationId : null };

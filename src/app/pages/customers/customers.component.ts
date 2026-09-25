@@ -130,10 +130,6 @@ import { Customer, AppModel } from '../../models/models';
     </div>
     <div class="header-actions">
       <button class="btn-ghost" (click)="cancel()">Cancel</button>
-      <button class="btn-primary" (click)="save()" [disabled]="saving">
-        <span *ngIf="saving" class="spinner"></span>
-        {{ saving ? 'Saving…' : '💾 Save Customer' }}
-      </button>
     </div>
   </div>
 

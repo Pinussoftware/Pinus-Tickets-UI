@@ -164,10 +164,6 @@ import { AuthService } from '../../services/auth.service';
     </div>
     <div class="header-actions">
       <button class="btn-ghost" (click)="cancel()">Cancel</button>
-      <button class="btn-primary" (click)="save()" [disabled]="saving">
-        <span *ngIf="saving" class="spinner"></span>
-        {{ saving ? 'Saving…' : '💾 Save Application' }}
-      </button>
     </div>
   </div>
 
