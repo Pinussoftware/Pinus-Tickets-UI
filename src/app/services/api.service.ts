@@ -68,7 +68,13 @@ export class ApiService {
   getHrmsEmployees()    { return this.http.get<any[]>(`${this.base}/hrms/employees`); }
   syncHrmsEmployees()   { return this.http.post<any>(`${this.base}/hrms/sync`, {}); }
 
-  // ── Notifications ─────────────────────────────────────────────────────────
+  // ── Attachments ───────────────────────────────────────────────────────────
+  uploadAttachment(ticketId: number, file: File) {
+    const fd = new FormData(); fd.append('file', file);
+    return this.http.post<any>(`${this.base}/tickets/${ticketId}/attachments`, fd);
+  }
+  getAttachments(ticketId: number) { return this.http.get<any[]>(`${this.base}/tickets/${ticketId}/attachments`); }
+  deleteAttachment(ticketId: number, id: number) { return this.http.delete(`${this.base}/tickets/${ticketId}/attachments/${id}`); }
   getNotifications(filters: any = {}) {
     let params = new HttpParams();
     Object.entries(filters).forEach(([k, v]) => { if (v) params = params.set(k, String(v)); });

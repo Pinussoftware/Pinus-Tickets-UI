@@ -143,6 +143,52 @@ import { Customer, AppModel, PRIORITIES, TYPES } from '../../models/models';
         </div>
       </div>
 
+      <!-- Section 4: Attachments -->
+      <div class="form-section">
+        <div class="section-title">
+          <span class="section-num">4</span> Attachments
+          <span class="attach-hint">Paste screenshot (Ctrl+V) or drag & drop files here</span>
+        </div>
+
+        <!-- Drop zone -->
+        <div class="drop-zone"
+             [class.drag-over]="dragOver"
+             (dragover)="$event.preventDefault(); dragOver=true"
+             (dragleave)="dragOver=false"
+             (drop)="onDrop($event)"
+             (paste)="onPaste($event)"
+             tabindex="0"
+             (keydown.enter)="fileInput.click()">
+          <div class="dz-inner">
+            <span class="dz-icon">📎</span>
+            <span class="dz-text">Drag & drop files or <a (click)="fileInput.click()" class="dz-link">browse</a></span>
+            <span class="dz-sub">Paste a screenshot anywhere on the page with Ctrl+V · Max 20MB per file</span>
+          </div>
+          <input #fileInput type="file" multiple hidden
+                 accept="image/*,.pdf,.docx,.xlsx,.zip,.txt,.log"
+                 (change)="onFileSelect($event)" />
+        </div>
+
+        <!-- Pending attachments list -->
+        <div class="attach-list" *ngIf="pendingFiles.length">
+          <div *ngFor="let f of pendingFiles; let i=index" class="attach-row">
+            <img *ngIf="f.preview" [src]="f.preview" class="attach-thumb" />
+            <span *ngIf="!f.preview" class="attach-icon-file">📄</span>
+            <div class="attach-meta">
+              <div class="attach-name">{{ f.file.name }}</div>
+              <div class="attach-size">{{ formatSize(f.file.size) }}</div>
+            </div>
+            <div class="attach-status">
+              <span *ngIf="f.status==='pending'"  class="st-pending">⏳ Pending</span>
+              <span *ngIf="f.status==='uploading'" class="st-uploading">⬆ Uploading…</span>
+              <span *ngIf="f.status==='done'"     class="st-done">✅ Uploaded</span>
+              <span *ngIf="f.status==='error'"    class="st-error">❌ Failed</span>
+            </div>
+            <button class="remove-att" (click)="removeFile(i)" *ngIf="f.status!=='done'">✕</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Right sidebar -->
@@ -251,6 +297,30 @@ h1 { font-size:22px; font-weight:700; color:#1e293b; margin:0; }
 .guide-item.low .g-dot      { background:#94a3b8; }
 .error-card { background:#fee2e2; border:1px solid #fecaca; color:#dc2626;
   padding:12px; border-radius:8px; font-size:13px; }
+
+/* Attachment section */
+.attach-hint { font-size:11px; color:#94a3b8; font-weight:400; margin-left:8px; }
+.drop-zone { border:2px dashed #e2e8f0; border-radius:10px; padding:28px 20px;
+  text-align:center; cursor:pointer; transition:all .2s; background:#fafafa; }
+.drop-zone:hover, .drop-zone.drag-over { border-color:#3b82f6; background:#eff6ff; }
+.dz-inner { display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; }
+.dz-icon { font-size:28px; }
+.dz-text { font-size:14px; color:#374151; }
+.dz-link { color:#3b82f6; cursor:pointer; text-decoration:underline; pointer-events:all; }
+.dz-sub { font-size:11.5px; color:#94a3b8; }
+.attach-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+.attach-row { display:flex; align-items:center; gap:10px; padding:10px 12px;
+  border:1px solid #e2e8f0; border-radius:8px; background:#fff; }
+.attach-thumb { width:48px; height:36px; object-fit:cover; border-radius:4px; border:1px solid #e2e8f0; }
+.attach-icon-file { font-size:28px; flex-shrink:0; }
+.attach-meta { flex:1; min-width:0; }
+.attach-name { font-size:13px; font-weight:500; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.attach-size { font-size:11px; color:#94a3b8; }
+.attach-status { font-size:12px; white-space:nowrap; }
+.st-pending   { color:#f59e0b; } .st-uploading { color:#3b82f6; }
+.st-done      { color:#16a34a; } .st-error     { color:#dc2626; }
+.remove-att { background:none; border:none; color:#94a3b8; font-size:16px; cursor:pointer; padding:2px 6px; border-radius:4px; }
+.remove-att:hover { background:#fee2e2; color:#dc2626; }
 @media(max-width:900px) {
   .form-grid { grid-template-columns:1fr; }
   .row-3,.row-4 { grid-template-columns:1fr 1fr; }
@@ -258,19 +328,75 @@ h1 { font-size:22px; font-weight:700; color:#1e293b; margin:0; }
   `]
 })
 export class TicketCreateComponent implements OnInit {
-  customers: Customer[] = [];
-  apps: AppModel[] = [];
+  customers: any[] = [];
+  apps: any[] = [];
   priorities = PRIORITIES;
   types = TYPES;
   loading = false;
   error = '';
+  dragOver = false;
+  pendingFiles: { file: File; preview: string | null; status: 'pending'|'uploading'|'done'|'error' }[] = [];
+
   form: any = { customerId:'', applicationId:'', environment:'', type:'Bug',
     priority:'Medium', impact:'', category:'', subject:'', description:'',
     reproductionSteps:'', expectedResult:'', actualResult:'' };
 
   constructor(private api: ApiService, private router: Router) {}
 
-  ngOnInit() { this.api.getCustomers().subscribe(c => this.customers = c); }
+  ngOnInit() {
+    this.api.getCustomers().subscribe(c => this.customers = c);
+    // Global paste listener for screenshots
+    document.addEventListener('paste', this.handleGlobalPaste);
+  }
+
+  ngOnDestroy() {
+    document.removeEventListener('paste', this.handleGlobalPaste);
+  }
+
+  private handleGlobalPaste = (e: ClipboardEvent) => { this.onPaste(e); };
+
+  onPaste(e: ClipboardEvent) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (file) {
+          const named = new File([file], `screenshot-${Date.now()}.png`, { type: file.type });
+          this.addFile(named);
+        }
+      }
+    }
+  }
+
+  onDrop(e: DragEvent) {
+    e.preventDefault(); this.dragOver = false;
+    Array.from(e.dataTransfer?.files ?? []).forEach(f => this.addFile(f));
+  }
+
+  onFileSelect(e: Event) {
+    const input = e.target as HTMLInputElement;
+    Array.from(input.files ?? []).forEach(f => this.addFile(f));
+    input.value = '';
+  }
+
+  addFile(file: File) {
+    const entry: any = { file, preview: null, status: 'pending' };
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = ev => entry.preview = ev.target?.result as string;
+      reader.readAsDataURL(file);
+    }
+    this.pendingFiles.push(entry);
+  }
+
+  removeFile(i: number) { this.pendingFiles.splice(i, 1); }
+
+  formatSize(bytes: number) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/1024/1024).toFixed(1) + ' MB';
+  }
 
   loadApps() {
     this.form.applicationId = '';
@@ -290,16 +416,26 @@ export class TicketCreateComponent implements OnInit {
     if (!this.form.customerId || !this.form.subject?.trim() || !this.form.description?.trim()) {
       this.error = !this.form.customerId
         ? 'Please select a Customer.'
-        : !this.form.subject?.trim()
-          ? 'Subject is required.'
-          : 'Description is required.';
+        : !this.form.subject?.trim() ? 'Subject is required.' : 'Description is required.';
       return;
     }
     this.loading = true; this.error = '';
     const payload = { ...this.form, customerId:+this.form.customerId,
       applicationId: this.form.applicationId ? +this.form.applicationId : null };
     this.api.createTicket(payload).subscribe({
-      next: t => this.router.navigate(['/tickets', t.id]),
+      next: t => {
+        // Upload attachments sequentially then navigate
+        const pending = this.pendingFiles.filter(f => f.status === 'pending');
+        if (!pending.length) { this.router.navigate(['/tickets', t.id]); return; }
+        let done = 0;
+        pending.forEach(entry => {
+          entry.status = 'uploading';
+          this.api.uploadAttachment(t.id, entry.file).subscribe({
+            next: () => { entry.status = 'done'; if (++done === pending.length) this.router.navigate(['/tickets', t.id]); },
+            error: () => { entry.status = 'error'; if (++done === pending.length) this.router.navigate(['/tickets', t.id]); }
+          });
+        });
+      },
       error: () => { this.error = 'Failed to create ticket. Try again.'; this.loading = false; }
     });
   }

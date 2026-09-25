@@ -120,7 +120,35 @@ const TRANSITIONS: Record<string,string[]> = {
     </div>
   </div>
 
-  <!-- History Tab -->
+  <!-- Attachments Tab -->
+  <div *ngIf="activeTab==='Attachments'" class="tab-content">
+    <div class="att-upload-zone"
+         [class.drag-over]="dragOver"
+         (dragover)="$event.preventDefault(); dragOver=true"
+         (dragleave)="dragOver=false"
+         (drop)="onDrop($event)"
+         (paste)="onPaste($event)"
+         tabindex="0">
+      <span>📎</span>
+      <span>Drag & drop or paste (Ctrl+V) to add attachments</span>
+      <button class="btn-sm-outline" (click)="attInput.click()">Browse Files</button>
+      <input #attInput type="file" multiple hidden (change)="onFileSelect($event)"
+             accept="image/*,.pdf,.docx,.xlsx,.zip,.txt,.log" />
+    </div>
+    <div class="att-list">
+      <div *ngFor="let a of attachments" class="att-row">
+        <img *ngIf="a.mimeType?.startsWith('image/')" [src]="a.url" class="att-thumb" />
+        <span *ngIf="!a.mimeType?.startsWith('image/')" class="att-file-icon">📄</span>
+        <div class="att-info">
+          <a [href]="a.url" target="_blank" class="att-name">{{ a.fileName }}</a>
+          <span class="att-size">{{ formatSize(a.sizeBytes) }}</span>
+        </div>
+        <span class="att-uploading" *ngIf="a.uploading">⬆ Uploading…</span>
+        <button class="att-del" (click)="deleteAttachment(a)">✕</button>
+      </div>
+      <div class="empty" *ngIf="attachments.length===0">No attachments yet.</div>
+    </div>
+  </div>
   <div *ngIf="activeTab==='History'" class="tab-content">
     <div class="timeline">
       <div *ngFor="let h of ticket.history" class="timeline-item">
@@ -198,17 +226,39 @@ h1 { font-size:20px; font-weight:700; color:#1e293b; margin:0 0 10px; }
 .tl-date { display:block; color:#94a3b8; font-size:12px; margin-top:4px; }
 .empty { text-align:center; color:#94a3b8; padding:20px; }
 .loading { padding:40px; text-align:center; color:#94a3b8; }
+/* Attachments */
+.att-upload-zone { border:2px dashed #e2e8f0; border-radius:10px; padding:24px; text-align:center;
+  display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer; margin-bottom:14px; background:#fafafa; }
+.att-upload-zone.drag-over { border-color:#3b82f6; background:#eff6ff; }
+.btn-sm-outline { padding:6px 14px; border:1px solid #3b82f6; color:#3b82f6; background:#fff;
+  border-radius:6px; font-size:12px; cursor:pointer; }
+.att-list { display:flex; flex-direction:column; gap:8px; }
+.att-row { display:flex; align-items:center; gap:10px; padding:10px 14px;
+  border:1px solid #e2e8f0; border-radius:8px; background:#fff; }
+.att-thumb { width:60px; height:44px; object-fit:cover; border-radius:4px; border:1px solid #e2e8f0; }
+.att-file-icon { font-size:28px; flex-shrink:0; }
+.att-info { flex:1; min-width:0; }
+.att-name { font-size:13px; font-weight:500; color:#3b82f6; text-decoration:none; display:block;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.att-name:hover { text-decoration:underline; }
+.att-size { font-size:11px; color:#94a3b8; }
+.att-uploading { font-size:12px; color:#3b82f6; white-space:nowrap; }
+.att-del { background:none; border:none; color:#94a3b8; font-size:16px; cursor:pointer;
+  padding:2px 6px; border-radius:4px; margin-left:auto; }
+.att-del:hover { background:#fee2e2; color:#dc2626; }
   `]
 })
 export class TicketDetailComponent implements OnInit {
   ticket?: TicketDetail;
   users: UserModel[] = [];
-  tabs = ['Overview','Conversation','History'];
+  tabs = ['Overview','Conversation','Attachments','History'];
   activeTab = 'Overview';
   nextStatus = '';
   assigneeId: any = '';
   commentBody = '';
   commentVis  = 'customer';
+  attachments: any[] = [];
+  dragOver = false;
 
   constructor(private api: ApiService, private route: ActivatedRoute) {}
 
@@ -216,6 +266,61 @@ export class TicketDetailComponent implements OnInit {
     const id = +this.route.snapshot.params['id'];
     this.loadTicket(id);
     this.api.getUsers().subscribe({ next: u => this.users = u, error: () => {} });
+    this.api.getAttachments(id).subscribe({ next: a => this.attachments = a, error: () => {} });
+    document.addEventListener('paste', this.handleGlobalPaste);
+  }
+
+  ngOnDestroy() { document.removeEventListener('paste', this.handleGlobalPaste); }
+  private handleGlobalPaste = (e: ClipboardEvent) => {
+    if (this.activeTab === 'Attachments') this.onPaste(e);
+  };
+
+  onPaste(e: ClipboardEvent) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (file) this.uploadFile(new File([file], `screenshot-${Date.now()}.png`, { type: file.type }));
+      }
+    }
+  }
+
+  onDrop(e: DragEvent) {
+    e.preventDefault(); this.dragOver = false;
+    Array.from(e.dataTransfer?.files ?? []).forEach(f => this.uploadFile(f));
+  }
+
+  onFileSelect(e: Event) {
+    const input = e.target as HTMLInputElement;
+    Array.from(input.files ?? []).forEach(f => this.uploadFile(f));
+    input.value = '';
+  }
+
+  uploadFile(file: File) {
+    if (!this.ticket) return;
+    const entry: any = { fileName: file.name, mimeType: file.type, sizeBytes: file.size, url: '', uploading: true };
+    if (file.type.startsWith('image/')) {
+      const r = new FileReader(); r.onload = ev => entry.url = ev.target?.result as string; r.readAsDataURL(file);
+    }
+    this.attachments.push(entry);
+    this.api.uploadAttachment(this.ticket.id, file).subscribe({
+      next: res => { entry.uploading = false; entry.url = res.url; entry.id = res.id; },
+      error: () => { entry.uploading = false; entry.error = true; }
+    });
+  }
+
+  deleteAttachment(a: any) {
+    if (!this.ticket || !a.id) { this.attachments = this.attachments.filter(x => x !== a); return; }
+    this.api.deleteAttachment(this.ticket.id, a.id).subscribe(() => {
+      this.attachments = this.attachments.filter(x => x !== a);
+    });
+  }
+
+  formatSize(bytes: number) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/1024/1024).toFixed(1) + ' MB';
   }
 
   loadTicket(id: number) {
