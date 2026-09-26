@@ -16,7 +16,65 @@ import { Customer, AppModel } from '../../models/models';
       <h1>Customer Master</h1>
       <p class="subtitle">Manage all customer organisations and their support scope</p>
     </div>
-    <button class="btn-primary" (click)="openNew()">+ Add Customer</button>
+    <div class="header-btns">
+      <button class="btn-erp-sync" (click)="openErpSync()">🔄 Sync from ERP</button>
+      <button class="btn-primary" (click)="openNew()">+ Add Customer</button>
+    </div>
+  </div>
+
+  <!-- ── ERP Sync Modal ── -->
+  <div class="modal-backdrop" *ngIf="showErpModal" (click)="showErpModal=false">
+    <div class="erp-modal" (click)="$event.stopPropagation()">
+      <div class="erp-modal-header">
+        <h3>🔄 Sync Clients from Pinus ERP</h3>
+        <button class="close-btn" (click)="showErpModal=false">✕</button>
+      </div>
+      <div class="erp-modal-body">
+        <div class="erp-loading" *ngIf="erpLoading">Loading ERP clients…</div>
+        <div class="erp-error"   *ngIf="erpError">{{ erpError }}</div>
+        <div *ngIf="!erpLoading && !erpError">
+          <p class="erp-desc">
+            Select clients from <strong>Pinus ERP</strong> to import into the Ticket System.
+            Already-synced clients will be updated with latest ERP data.
+          </p>
+          <div class="erp-select-all">
+            <label class="cb-row">
+              <input type="checkbox" [(ngModel)]="selectAllErp" (change)="toggleSelectAll()" />
+              <strong>Select All ({{ erpClients.length }} active clients)</strong>
+            </label>
+          </div>
+          <div class="erp-client-list">
+            <div *ngFor="let c of erpClients" class="erp-client-row"
+                 [class.already]="c.alreadySynced"
+                 (click)="toggleErpSelect(c)">
+              <input type="checkbox" [(ngModel)]="c.selected" (click)="$event.stopPropagation()" />
+              <div class="erc-info">
+                <div class="erc-name">
+                  {{ c.clientName }}
+                  <span class="erc-code">{{ c.clientCode }}</span>
+                  <span class="erc-synced" *ngIf="c.alreadySynced">✅ Already synced</span>
+                </div>
+                <div class="erc-meta">
+                  <span *ngIf="c.contactPerson">👤 {{ c.contactPerson }}</span>
+                  <span *ngIf="c.email">📧 {{ c.email }}</span>
+                  <span *ngIf="c.city">📍 {{ c.city }}<span *ngIf="c.state">, {{ c.state }}</span></span>
+                  <span *ngIf="c.gstin">GST: {{ c.gstin }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="erp-result" *ngIf="syncResult">{{ syncResult }}</div>
+        </div>
+      </div>
+      <div class="erp-modal-footer" *ngIf="!erpLoading && !erpError">
+        <span class="sel-count">{{ selectedErpCount }} selected</span>
+        <button class="btn-ghost" (click)="showErpModal=false">Cancel</button>
+        <button class="btn-sync" (click)="doErpSync()" [disabled]="selectedErpCount===0 || syncing">
+          <span *ngIf="syncing">Syncing…</span>
+          <span *ngIf="!syncing">⬇ Import Selected</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Summary cards -->
@@ -447,14 +505,64 @@ td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #
   .row-3 { grid-template-columns:1fr 1fr; }
   .row-4 { grid-template-columns:1fr 1fr; }
 }
+/* ERP Sync */
+.header-btns { display:flex; gap:10px; align-items:center; }
+.btn-erp-sync { background:#0f766e; color:#fff; border:none; padding:10px 18px; border-radius:8px;
+  font-size:13px; font-weight:600; cursor:pointer; }
+.btn-erp-sync:hover { background:#0d9488; }
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000;
+  display:flex; align-items:center; justify-content:center; }
+.erp-modal { background:#fff; border-radius:16px; width:640px; max-width:95vw; max-height:85vh;
+  display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+.erp-modal-header { display:flex; justify-content:space-between; align-items:center;
+  padding:18px 22px; border-bottom:1px solid #e2e8f0; }
+.erp-modal-header h3 { font-size:16px; font-weight:700; color:#1e293b; margin:0; }
+.close-btn { background:none; border:none; font-size:18px; cursor:pointer; color:#64748b; padding:4px 8px; }
+.close-btn:hover { color:#1e293b; }
+.erp-modal-body { flex:1; overflow-y:auto; padding:18px 22px; }
+.erp-loading { text-align:center; padding:32px; color:#64748b; }
+.erp-error { background:#fee2e2; color:#dc2626; border-radius:8px; padding:12px; font-size:13px; }
+.erp-desc { font-size:13px; color:#475569; margin:0 0 14px; }
+.erp-select-all { padding:10px 14px; background:#f8fafc; border-radius:8px; margin-bottom:10px; }
+.cb-row { display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; }
+.cb-row input { width:16px; height:16px; accent-color:#0f766e; }
+.erp-client-list { display:flex; flex-direction:column; gap:8px; }
+.erp-client-row { display:flex; align-items:flex-start; gap:12px; padding:12px 14px;
+  border:1.5px solid #e2e8f0; border-radius:10px; cursor:pointer; transition:all .15s; }
+.erp-client-row:hover { border-color:#0d9488; background:#f0fdf4; }
+.erp-client-row.already { border-color:#bbf7d0; background:#f0fdf4; }
+.erp-client-row input[type=checkbox] { width:16px; height:16px; margin-top:2px; accent-color:#0f766e; flex-shrink:0; }
+.erc-info { flex:1; }
+.erc-name { font-size:13.5px; font-weight:600; color:#1e293b; margin-bottom:4px; }
+.erc-code { font-family:monospace; font-size:11px; background:#f1f5f9; color:#475569;
+  padding:1px 7px; border-radius:4px; margin-left:8px; }
+.erc-synced { font-size:11px; color:#16a34a; margin-left:8px; }
+.erc-meta { display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:#64748b; }
+.erp-result { margin-top:14px; padding:12px 16px; background:#f0fdf4; border:1px solid #bbf7d0;
+  color:#15803d; border-radius:8px; font-size:13px; font-weight:500; }
+.erp-modal-footer { display:flex; align-items:center; gap:10px; padding:14px 22px;
+  border-top:1px solid #e2e8f0; }
+.sel-count { font-size:13px; color:#64748b; margin-right:auto; }
+.btn-sync { background:#0f766e; color:#fff; border:none; padding:10px 22px; border-radius:8px;
+  font-size:13px; font-weight:600; cursor:pointer; }
+.btn-sync:hover:not(:disabled) { background:#0d9488; }
+.btn-sync:disabled { opacity:.6; cursor:not-allowed; }
   `]
 })
 export class CustomersComponent implements OnInit {
-  customers: Customer[] = [];
-  filtered: Customer[] = [];
+  customers: any[] = [];
+  filtered: any[] = [];
   search = '';
   statusFilter = '';
   showForm = false;
+  // ERP Sync
+  showErpModal = false;
+  erpClients: any[] = [];
+  erpLoading = false;
+  erpError = '';
+  selectAllErp = false;
+  syncing = false;
+  syncResult = '';
   editing = false;
   editId = 0;
   saving = false;
@@ -477,6 +585,56 @@ export class CustomersComponent implements OnInit {
       this.applySearch();
     });
     this.api.getApplications().subscribe(a => this.totalApps = a.length);
+  }
+
+  // ── ERP Sync ───────────────────────────────────────────────────────────────
+  openErpSync() {
+    this.showErpModal = true;
+    this.syncResult = '';
+    this.erpError = '';
+    this.erpClients = [];
+    this.erpLoading = true;
+    this.api.getErpClients().subscribe({
+      next: clients => {
+        this.erpClients = clients.map((c: any) => ({ ...c, selected: !c.alreadySynced }));
+        this.selectAllErp = this.erpClients.every((c: any) => c.selected);
+        this.erpLoading = false;
+      },
+      error: (e: any) => {
+        this.erpError = e?.error?.message || 'Failed to load ERP clients';
+        this.erpLoading = false;
+      }
+    });
+  }
+
+  toggleSelectAll() {
+    this.erpClients.forEach((c: any) => c.selected = this.selectAllErp);
+  }
+
+  toggleErpSelect(c: any) {
+    c.selected = !c.selected;
+    this.selectAllErp = this.erpClients.every((x: any) => x.selected);
+  }
+
+  get selectedErpCount() { return this.erpClients.filter((c: any) => c.selected).length; }
+
+  doErpSync() {
+    const codes = this.erpClients.filter((c: any) => c.selected).map((c: any) => c.clientCode);
+    this.syncing = true; this.syncResult = '';
+    this.api.syncErpClients(codes).subscribe({
+      next: (res: any) => {
+        this.syncing = false;
+        this.syncResult = `✅ ${res.message}`;
+        // Refresh customer list
+        this.api.getCustomers().subscribe(c => { this.customers = c; this.applySearch(); });
+        // Refresh already-synced flags
+        setTimeout(() => this.openErpSync(), 1200);
+      },
+      error: (e: any) => {
+        this.syncing = false;
+        this.syncResult = '❌ Sync failed: ' + (e?.error?.message || 'Unknown error');
+      }
+    });
   }
 
   emptyForm() {

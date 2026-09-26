@@ -36,6 +36,10 @@ export class ApiService {
   createCustomer(body: any)               { return this.http.post<any>(`${this.base}/customers`, body); }
   updateCustomer(id: number, body: any)   { return this.http.patch<any>(`${this.base}/customers/${id}`, body); }
 
+  // ── ERP Sync ───────────────────────────────────────────────────────────────
+  getErpClients()                         { return this.http.get<any[]>(`${this.base}/erp/clients`); }
+  syncErpClients(codes?: string[])        { return this.http.post<any>(`${this.base}/erp/sync`, { clientCodes: codes ?? null }); }
+
   // ── Applications ──────────────────────────────────────────────────────────
   getApplications(customerId?: number) {
     const params = customerId ? { params: new HttpParams().set('customerId', customerId) } : {};
