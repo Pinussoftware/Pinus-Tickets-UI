@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
+import { ApiService } from '../services/api.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -25,45 +26,45 @@ import { filter } from 'rxjs/operators';
     <nav class="nav">
       <div class="nav-section">
         <span class="nav-label" *ngIf="!collapsed">OVERVIEW</span>
-        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" title="Dashboard">
+        <a *ngIf="can('dashboard')" routerLink="/dashboard" routerLinkActive="active" class="nav-item" title="Dashboard">
           <span class="nav-icon">📊</span><span class="nav-text" *ngIf="!collapsed">Dashboard</span>
         </a>
       </div>
 
       <div class="nav-section">
         <span class="nav-label" *ngIf="!collapsed">TICKETS</span>
-        <a routerLink="/tickets" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" title="All Tickets">
+        <a *ngIf="can('tickets')" routerLink="/tickets" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-item" title="All Tickets">
           <span class="nav-icon">🎫</span><span class="nav-text" *ngIf="!collapsed">All Tickets</span>
         </a>
-        <a routerLink="/tickets/new" routerLinkActive="active" class="nav-item" title="New Ticket">
+        <a *ngIf="can('ticket_create')" routerLink="/tickets/new" routerLinkActive="active" class="nav-item" title="New Ticket">
           <span class="nav-icon">➕</span><span class="nav-text" *ngIf="!collapsed">Create Ticket</span>
         </a>
-        <a routerLink="/workbench" routerLinkActive="active" class="nav-item" title="My Workbench">
+        <a *ngIf="can('workbench')" routerLink="/workbench" routerLinkActive="active" class="nav-item" title="My Workbench">
           <span class="nav-icon">🔧</span><span class="nav-text" *ngIf="!collapsed">My Workbench</span>
         </a>
-        <a routerLink="/qa-queue" routerLinkActive="active" class="nav-item" title="QA Queue">
+        <a *ngIf="can('qa_queue')" routerLink="/qa-queue" routerLinkActive="active" class="nav-item" title="QA Queue">
           <span class="nav-icon">🔬</span><span class="nav-text" *ngIf="!collapsed">QA Queue</span>
         </a>
       </div>
 
       <div class="nav-section">
         <span class="nav-label" *ngIf="!collapsed">MANAGEMENT</span>
-        <a routerLink="/assignment"   routerLinkActive="active" class="nav-item" title="Assignment">
+        <a *ngIf="can('assignment')"    routerLink="/assignment"   routerLinkActive="active" class="nav-item" title="Assignment">
           <span class="nav-icon">🎯</span><span class="nav-text" *ngIf="!collapsed">Assignment</span>
         </a>
-        <a routerLink="/customers"    routerLinkActive="active" class="nav-item" title="Customers">
+        <a *ngIf="can('customers')"     routerLink="/customers"    routerLinkActive="active" class="nav-item" title="Customers">
           <span class="nav-icon">🏢</span><span class="nav-text" *ngIf="!collapsed">Customers</span>
         </a>
-        <a routerLink="/applications" routerLinkActive="active" class="nav-item" title="Applications">
+        <a *ngIf="can('applications')"  routerLink="/applications" routerLinkActive="active" class="nav-item" title="Applications">
           <span class="nav-icon">💻</span><span class="nav-text" *ngIf="!collapsed">Applications</span>
         </a>
-        <a routerLink="/contracts" routerLinkActive="active" class="nav-item" title="Contracts & SLA">
+        <a *ngIf="can('contracts')"     routerLink="/contracts"    routerLinkActive="active" class="nav-item" title="Contracts & SLA">
           <span class="nav-icon">📋</span><span class="nav-text" *ngIf="!collapsed">Contracts & SLA</span>
         </a>
-        <a routerLink="/reports" routerLinkActive="active" class="nav-item" title="Reports">
+        <a *ngIf="can('reports')"       routerLink="/reports"      routerLinkActive="active" class="nav-item" title="Reports">
           <span class="nav-icon">📈</span><span class="nav-text" *ngIf="!collapsed">Reports</span>
         </a>
-        <a routerLink="/notifications" routerLinkActive="active" class="nav-item" title="Notifications">
+        <a *ngIf="can('notifications')" routerLink="/notifications" routerLinkActive="active" class="nav-item" title="Notifications">
           <span class="nav-icon">📬</span><span class="nav-text" *ngIf="!collapsed">Notifications</span>
         </a>
       </div>
@@ -118,7 +119,7 @@ import { filter } from 'rxjs/operators';
           <span class="org-dot"></span>
           {{ user?.organizationName }}
         </div>
-        <a routerLink="/tickets/new" class="topbar-new-btn">
+        <a *ngIf="can('ticket_create')" routerLink="/tickets/new" class="topbar-new-btn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
@@ -215,34 +216,61 @@ import { filter } from 'rxjs/operators';
 export class LayoutComponent implements OnInit {
   collapsed = false;
   pageTitle = 'Dashboard';
+  // Map of pageKey -> canAccess (null = not loaded yet, Admin = all true)
+  private perms: Record<string, boolean> = {};
+  private permsLoaded = false;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private api: ApiService, private router: Router) {}
 
   ngOnInit() {
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e: any) => {
       const url = e.urlAfterRedirects;
       this.pageTitle =
-        url.includes('/dashboard')    ? 'Dashboard' :
-        url.includes('/tickets/new')  ? 'Create Ticket' :
-        url.match(/\/tickets\/\d+/)   ? 'Ticket Detail' :
-        url.includes('/tickets')      ? 'All Tickets' :
-        url.includes('/workbench')    ? 'My Workbench' :
-        url.includes('/qa-queue')     ? 'QA Queue' :
-        url.includes('/customers')    ? 'Customers' :
-        url.includes('/applications') ? 'Applications' :
-        url.includes('/contracts')    ? 'Contracts & SLA' :
-        url.includes('/assignment')   ? 'Ticket Assignment' :
+        url.includes('/dashboard')     ? 'Dashboard' :
+        url.includes('/tickets/new')   ? 'Create Ticket' :
+        url.match(/\/tickets\/\d+/)    ? 'Ticket Detail' :
+        url.includes('/tickets')       ? 'All Tickets' :
+        url.includes('/workbench')     ? 'My Workbench' :
+        url.includes('/qa-queue')      ? 'QA Queue' :
+        url.includes('/customers')     ? 'Customers' :
+        url.includes('/applications')  ? 'Applications' :
+        url.includes('/contracts')     ? 'Contracts & SLA' :
+        url.includes('/assignment')    ? 'Ticket Assignment' :
         url.includes('/notifications') ? 'Notifications' :
-        url.includes('/reports')      ? 'Reports' :
-        url.includes('/users')        ? 'User Management' : 'Dashboard';
+        url.includes('/reports')       ? 'Reports' :
+        url.includes('/role-permissions') ? 'Role Permissions' :
+        url.includes('/users')         ? 'User Management' : 'Dashboard';
+    });
+
+    this.loadPermissions();
+  }
+
+  loadPermissions() {
+    const role = this.auth.role;
+    // Admin always sees everything — no lookup needed
+    if (role === 'Admin') { this.permsLoaded = true; return; }
+    this.api.getRolePermissions(role).subscribe({
+      next: (data: any[]) => {
+        this.perms = {};
+        data.forEach((d: any) => { this.perms[d.pageKey] = d.canAccess; });
+        this.permsLoaded = true;
+      },
+      error: () => { this.permsLoaded = true; } // fail open — show all if API fails
     });
   }
 
+  // Admin always true; others check loaded perms (default true while loading)
+  can(pageKey: string): boolean {
+    if (this.auth.role === 'Admin') return true;
+    if (!this.permsLoaded) return false;
+    return this.perms[pageKey] === true;
+  }
+
   get user()    { return this.auth.currentUser; }
-  get isAdmin() { return ['Admin','SupportManager'].includes(this.auth.role); }
+  get isAdmin() { return ['Admin', 'SupportManager'].includes(this.auth.role); }
   get initials() {
     const n = this.auth.currentUser?.name || 'U';
-    return n.split(' ').map((w:string) => w[0]).join('').toUpperCase().slice(0,2);
+    return n.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
   }
   logout() { this.auth.logout(); }
 }
