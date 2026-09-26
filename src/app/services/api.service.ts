@@ -35,6 +35,7 @@ export class ApiService {
   getCustomers()                           { return this.http.get<any[]>(`${this.base}/customers`); }
   createCustomer(body: any)               { return this.http.post<any>(`${this.base}/customers`, body); }
   updateCustomer(id: number, body: any)   { return this.http.patch<any>(`${this.base}/customers/${id}`, body); }
+  deleteCustomer(id: number)              { return this.http.delete(`${this.base}/customers/${id}`); }
 
   // ── ERP Sync ───────────────────────────────────────────────────────────────
   getErpClients()                         { return this.http.get<any[]>(`${this.base}/erp/clients`); }

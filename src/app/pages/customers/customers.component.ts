@@ -155,6 +155,7 @@ import { Customer, AppModel } from '../../models/models';
           <td class="actions-cell">
             <button class="act-btn edit" (click)="edit(c)" title="Edit">✏</button>
             <button class="act-btn view" (click)="edit(c)" title="View Details">👁</button>
+            <button class="act-btn del" (click)="deleteCustomer(c)" title="Delete">🗑</button>
           </td>
         </tr>
         <tr *ngIf="filtered.length === 0">
@@ -447,6 +448,7 @@ td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #
   border-radius:6px; cursor:pointer; font-size:13px; margin-right:4px; transition:all .15s; }
 .act-btn.edit:hover { border-color:#f59e0b; background:#fef3c7; }
 .act-btn.view:hover { border-color:#3b82f6; background:#eff6ff; }
+.act-btn.del:hover  { border-color:#ef4444; background:#fee2e2; }
 .empty-row { text-align:center; padding:40px !important; }
 .empty-state { display:flex; flex-direction:column; align-items:center; gap:8px; }
 .empty-state span { font-size:36px; }
@@ -712,6 +714,17 @@ export class CustomersComponent implements OnInit {
   }
 
   cancel() { this.showForm = false; this.errorMsg = ''; }
+
+  deleteCustomer(c: any) {
+    if (!confirm('Delete customer "' + c.name + '"?\n\nThis will also remove all linked tickets and contracts.')) return;
+    this.api.deleteCustomer(c.id).subscribe({
+      next: () => {
+        this.customers = this.customers.filter((x: any) => x.id !== c.id);
+        this.applySearch();
+      },
+      error: (e: any) => alert('Delete failed: ' + (e?.error?.message || 'Server error'))
+    });
+  }
 
   save() {
     if (!this.form.name?.trim() || !this.form.accountCode?.trim()) {
