@@ -41,6 +41,10 @@ export class ApiService {
   getErpClients()                         { return this.http.get<any[]>(`${this.base}/erp/clients`); }
   syncErpClients(codes?: string[])        { return this.http.post<any>(`${this.base}/erp/sync`, { clientCodes: codes ?? null }); }
 
+  // ── Role Permissions ──────────────────────────────────────────────────────
+  getRolePermissions(role: string)        { return this.http.get<any[]>(`${this.base}/role-permissions/${role}`); }
+  saveRolePermissions(role: string, perms: any[]) { return this.http.post<any>(`${this.base}/role-permissions/${role}`, perms); }
+
   // ── Applications ──────────────────────────────────────────────────────────
   getApplications(customerId?: number) {
     const params = customerId ? { params: new HttpParams().set('customerId', customerId) } : {};

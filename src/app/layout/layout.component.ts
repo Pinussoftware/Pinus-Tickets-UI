@@ -73,6 +73,9 @@ import { filter } from 'rxjs/operators';
         <a routerLink="/users" routerLinkActive="active" class="nav-item" title="Users">
           <span class="nav-icon">👥</span><span class="nav-text" *ngIf="!collapsed">Users</span>
         </a>
+        <a routerLink="/role-permissions" routerLinkActive="active" class="nav-item" title="Role Permissions">
+          <span class="nav-icon">🔐</span><span class="nav-text" *ngIf="!collapsed">Role Permissions</span>
+        </a>
       </div>
     </nav>
 

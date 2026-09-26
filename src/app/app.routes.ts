@@ -20,7 +20,8 @@ export const routes: Routes = [
       { path: 'contracts',    loadComponent: () => import('./pages/contracts/contracts.component').then(m => m.ContractsComponent) },
       { path: 'reports',      loadComponent: () => import('./pages/reports/reports.component').then(m => m.ReportsComponent) },
       { path: 'notifications',loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent) },
-      { path: 'users',        loadComponent: () => import('./pages/users/users.component').then(m => m.UsersComponent) },
+      { path: 'users',            loadComponent: () => import('./pages/users/users.component').then(m => m.UsersComponent) },
+      { path: 'role-permissions', loadComponent: () => import('./pages/role-permissions/role-permissions.component').then(m => m.RolePermissionsComponent) },
     ]
   },
   { path: '**', redirectTo: '' }
