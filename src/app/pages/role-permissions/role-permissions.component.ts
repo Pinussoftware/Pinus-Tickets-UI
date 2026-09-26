@@ -4,27 +4,27 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 
 const ROLES = [
-  { key: 'SupportManager',   label: 'Support Manager',   color: '#7c3aed', bg: '#ede9fe' },
-  { key: 'SupportExecutive', label: 'Support Executive',  color: '#0369a1', bg: '#e0f2fe' },
-  { key: 'CustomerAdmin',    label: 'Customer Admin',     color: '#065f46', bg: '#d1fae5' },
-  { key: 'CustomerUser',     label: 'Customer User',      color: '#92400e', bg: '#fef3c7' },
+  { key: 'SupportManager',   label: 'Support Manager'   },
+  { key: 'SupportExecutive', label: 'Support Executive'  },
+  { key: 'CustomerAdmin',    label: 'Customer Admin'     },
+  { key: 'CustomerUser',     label: 'Customer User'      },
 ];
 
 const PAGES = [
-  { key:'dashboard',        label:'Dashboard',           icon:'📊', section:'Overview' },
-  { key:'tickets',          label:'All Tickets',         icon:'🎫', section:'Tickets' },
-  { key:'ticket_create',    label:'Create Ticket',       icon:'➕', section:'Tickets' },
-  { key:'ticket_detail',    label:'Ticket Detail',       icon:'🔍', section:'Tickets' },
-  { key:'workbench',        label:'My Workbench',        icon:'🛠', section:'Tickets' },
-  { key:'qa_queue',         label:'QA Queue',            icon:'🔬', section:'Tickets' },
-  { key:'assignment',       label:'Assignment',          icon:'🎯', section:'Management' },
-  { key:'customers',        label:'Customers',           icon:'🏢', section:'Management' },
-  { key:'applications',     label:'Applications',        icon:'💻', section:'Management' },
-  { key:'contracts',        label:'Contracts & SLA',     icon:'📋', section:'Management' },
-  { key:'reports',          label:'Reports & Analytics', icon:'📈', section:'Management' },
-  { key:'notifications',    label:'Notifications',       icon:'🔔', section:'Management' },
-  { key:'users',            label:'Users',               icon:'👥', section:'Administration' },
-  { key:'role_permissions', label:'Role Permissions',    icon:'🔐', section:'Administration' },
+  { key:'dashboard',        label:'Dashboard',           icon:'📊', section:'OVERVIEW' },
+  { key:'tickets',          label:'All Tickets',         icon:'🎫', section:'TICKETS' },
+  { key:'ticket_create',    label:'Create Ticket',       icon:'➕', section:'TICKETS' },
+  { key:'ticket_detail',    label:'Ticket Detail',       icon:'🔍', section:'TICKETS' },
+  { key:'workbench',        label:'My Workbench',        icon:'🛠', section:'TICKETS' },
+  { key:'qa_queue',         label:'QA Queue',            icon:'🔬', section:'TICKETS' },
+  { key:'assignment',       label:'Assignment',          icon:'🎯', section:'MANAGEMENT' },
+  { key:'customers',        label:'Customers',           icon:'🏢', section:'MANAGEMENT' },
+  { key:'applications',     label:'Applications',        icon:'💻', section:'MANAGEMENT' },
+  { key:'contracts',        label:'Contracts & SLA',     icon:'📋', section:'MANAGEMENT' },
+  { key:'reports',          label:'Reports & Analytics', icon:'📈', section:'MANAGEMENT' },
+  { key:'notifications',    label:'Notifications',       icon:'🔔', section:'MANAGEMENT' },
+  { key:'users',            label:'Users',               icon:'👥', section:'ADMINISTRATION' },
+  { key:'role_permissions', label:'Role Permissions',    icon:'🔐', section:'ADMINISTRATION' },
 ];
 
 const SECTIONS = [...new Set(PAGES.map(p => p.section))];
@@ -35,30 +35,29 @@ const SECTIONS = [...new Set(PAGES.map(p => p.section))];
   imports: [CommonModule, FormsModule],
   template: `
 <div class="page">
+
+  <!-- Header -->
   <div class="page-header">
-    <div>
-      <h1>🔐 Role Permissions</h1>
-      <p class="subtitle">Configure what each role can access, create, edit and delete</p>
+    <div class="title-group">
+      <h1>Role Permissions</h1>
+      <p class="subtitle">Configure access for each role across all system modules</p>
     </div>
-    <div class="header-right">
-      <div class="role-tabs">
-        <button *ngFor="let r of roles" class="role-tab"
-                [class.active]="selectedRole===r.key"
-                [style.border-color]="selectedRole===r.key ? r.color : ''"
-                [style.color]="selectedRole===r.key ? r.color : ''"
-                [style.background]="selectedRole===r.key ? r.bg : ''"
-                (click)="selectRole(r.key)">
-          {{ r.label }}
-        </button>
-      </div>
+    <div class="header-actions">
+      <span class="role-label">Configure access for:</span>
+      <select class="role-select" [(ngModel)]="selectedRole" (change)="loadPerms()">
+        <option *ngFor="let r of roles" [value]="r.key">{{ r.label }}</option>
+      </select>
+      <button class="btn-save" (click)="save()" [disabled]="saving">
+        <span *ngIf="saving" class="spinner"></span>
+        {{ saving ? 'Saving...' : '💾 Save Permissions' }}
+      </button>
     </div>
   </div>
 
   <!-- Info banner -->
   <div class="info-banner">
-    <span>🛡</span>
-    <span><strong>Admin</strong> always has full access to everything and cannot be restricted.
-    Configure permissions below for <strong>{{ currentRoleLabel }}</strong>.</span>
+    ℹ️ <strong>Admin role</strong> always has full access to everything and cannot be restricted.
+    Configure permissions below for <strong>{{ currentRoleLabel }}</strong>.
   </div>
 
   <!-- Success / Error -->
@@ -67,205 +66,149 @@ const SECTIONS = [...new Set(PAGES.map(p => p.section))];
 
   <!-- Table card -->
   <div class="table-card">
-    <!-- Search + bulk controls -->
-    <div class="table-toolbar">
-      <input class="search-input" [(ngModel)]="search" placeholder="🔍 Search page / module…" />
-      <div class="bulk-btns">
-        <button class="bulk-btn green" (click)="setAll('full')">✅ Full Access All</button>
-        <button class="bulk-btn blue"  (click)="setAll('view')">👁 View Only All</button>
-        <button class="bulk-btn red"   (click)="setAll('none')">🚫 No Access All</button>
-      </div>
-    </div>
+    <table class="perm-table">
+      <thead>
+        <tr>
+          <th class="th-check">
+            <input type="checkbox" [checked]="allChecked()" (change)="toggleAll($event)" />
+          </th>
+          <th class="th-page">Page / Module</th>
+          <th class="th-perm">Access<br><span class="sub">(can view)</span></th>
+          <th class="th-perm">Create<br><span class="sub">(+ button)</span></th>
+          <th class="th-perm">Edit<br><span class="sub">(edit button)</span></th>
+          <th class="th-perm">Delete<br><span class="sub">(delete button)</span></th>
+          <th class="th-quick">Quick Set</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let section of sections">
+          <tr class="section-row"><td colspan="7">{{ section }}</td></tr>
+          <tr *ngFor="let p of pagesBySection(section)"
+              class="perm-row" [class.no-access]="!perm(p.key).canAccess">
+            <td class="td-check">
+              <input type="checkbox"
+                     [checked]="hasAnyAccess(p.key)"
+                     (change)="toggleRowAny(p.key, $event)" />
+            </td>
+            <td class="td-page" [class.muted]="!perm(p.key).canAccess">
+              <span class="page-icon">{{ p.icon }}</span>
+              <strong>{{ p.label }}</strong>
+            </td>
+            <td class="td-cb">
+              <input type="checkbox" class="cb access"
+                     [(ngModel)]="perm(p.key).canAccess"
+                     (change)="onAccessChange(p.key)" />
+            </td>
+            <td class="td-cb">
+              <input type="checkbox" class="cb create"
+                     [(ngModel)]="perm(p.key).canCreate"
+                     [disabled]="!perm(p.key).canAccess"
+                     (change)="onActionChange(p.key)" />
+            </td>
+            <td class="td-cb">
+              <input type="checkbox" class="cb edit"
+                     [(ngModel)]="perm(p.key).canEdit"
+                     [disabled]="!perm(p.key).canAccess"
+                     (change)="onActionChange(p.key)" />
+            </td>
+            <td class="td-cb">
+              <input type="checkbox" class="cb delete"
+                     [(ngModel)]="perm(p.key).canDelete"
+                     [disabled]="!perm(p.key).canAccess"
+                     (change)="onActionChange(p.key)" />
+            </td>
+            <td class="td-quick">
+              <button class="qb all"  (click)="setRow(p.key,'full')" [class.active]="isFullAccess(p.key)">All</button>
+              <button class="qb view" (click)="setRow(p.key,'view')" [class.active]="isViewOnly(p.key)">View</button>
+              <button class="qb none" (click)="setRow(p.key,'none')" [class.active]="isNoAccess(p.key)">None</button>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2" class="footer-summary">
+            Summary: <strong>{{ accessCount() }}</strong> of <strong>{{ pages.length }}</strong> pages accessible
+          </td>
+          <td colspan="5" class="footer-bulk">
+            <button class="bulk-btn all"  (click)="setAll('full')">✅ Full Access All</button>
+            <button class="bulk-btn view" (click)="setAll('view')">👁 View Only All</button>
+            <button class="bulk-btn none" (click)="setAll('none')">🚫 No Access All</button>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 
-    <!-- Table header -->
-    <div class="perm-header">
-      <div class="col-check">
-        <input type="checkbox" [checked]="allFullAccess()" (change)="toggleAll($event)"
-               title="Toggle all full access" />
-      </div>
-      <div class="col-page">Page / Module</div>
-      <div class="col-perm center">
-        <div>Access</div><div class="sub">(can view)</div>
-      </div>
-      <div class="col-perm center">
-        <div>Create</div><div class="sub">(+ button)</div>
-      </div>
-      <div class="col-perm center">
-        <div>Edit</div><div class="sub">(edit button)</div>
-      </div>
-      <div class="col-perm center">
-        <div>Delete</div><div class="sub">(delete button)</div>
-      </div>
-      <div class="col-quick center">Quick Set</div>
-    </div>
-
-    <!-- Section groups -->
-    <ng-container *ngFor="let section of sections">
-      <ng-container *ngIf="filteredPages(section).length">
-        <!-- Section header -->
-        <div class="section-row">{{ section }}</div>
-        <!-- Page rows -->
-        <div *ngFor="let p of filteredPages(section)" class="perm-row"
-             [class.dimmed]="!perm(p.key).canAccess">
-          <!-- Row checkbox = full access toggle -->
-          <div class="col-check">
-            <input type="checkbox"
-                   [checked]="isFullAccess(p.key)"
-                   (change)="toggleRowFull(p.key, $event)" />
-          </div>
-          <!-- Page info -->
-          <div class="col-page">
-            <div class="page-icon-wrap">{{ p.icon }}</div>
-            <div>
-              <div class="page-label">{{ p.label }}</div>
-              <div class="page-section-tag">{{ p.section }}</div>
-            </div>
-          </div>
-          <!-- Access -->
-          <div class="col-perm center">
-            <input type="checkbox" class="cb access"
-                   [(ngModel)]="perm(p.key).canAccess"
-                   (change)="onAccessChange(p.key)" />
-          </div>
-          <!-- Create -->
-          <div class="col-perm center">
-            <input type="checkbox" class="cb create"
-                   [(ngModel)]="perm(p.key).canCreate"
-                   [disabled]="!perm(p.key).canAccess"
-                   (change)="onActionChange(p.key)" />
-          </div>
-          <!-- Edit -->
-          <div class="col-perm center">
-            <input type="checkbox" class="cb edit"
-                   [(ngModel)]="perm(p.key).canEdit"
-                   [disabled]="!perm(p.key).canAccess"
-                   (change)="onActionChange(p.key)" />
-          </div>
-          <!-- Delete -->
-          <div class="col-perm center">
-            <input type="checkbox" class="cb delete"
-                   [(ngModel)]="perm(p.key).canDelete"
-                   [disabled]="!perm(p.key).canAccess"
-                   (change)="onActionChange(p.key)" />
-          </div>
-          <!-- Quick set -->
-          <div class="col-quick">
-            <div class="quick-btns">
-              <button class="qb all"  (click)="setRow(p.key,'full')"
-                      [class.active]="isFullAccess(p.key)">All</button>
-              <button class="qb view" (click)="setRow(p.key,'view')"
-                      [class.active]="isViewOnly(p.key)">View</button>
-              <button class="qb none" (click)="setRow(p.key,'none')"
-                      [class.active]="isNoAccess(p.key)">None</button>
-            </div>
-          </div>
-        </div>
-      </ng-container>
-    </ng-container>
-
-    <!-- Footer summary + save -->
-    <div class="table-footer">
-      <span class="summary">
-        Summary: <strong>{{ accessCount() }}</strong> of <strong>{{ pages.length }}</strong> pages accessible
-      </span>
-      <button class="btn-save" (click)="save()" [disabled]="saving">
-        <span *ngIf="saving" class="spinner"></span>
-        {{ saving ? 'Saving…' : '💾 Save Permissions' }}
-      </button>
-    </div>
+  <div class="bottom-bar">
+    <button class="btn-save" (click)="save()" [disabled]="saving">
+      <span *ngIf="saving" class="spinner"></span>
+      {{ saving ? 'Saving...' : '💾 Save Permissions' }}
+    </button>
   </div>
 </div>
   `,
   styles: [`
 .page { padding:20px 28px; max-width:1300px; margin:0 auto; }
-.page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; flex-wrap:wrap; gap:12px; }
-h1 { font-size:22px; font-weight:700; color:#1e293b; margin:0 0 4px; }
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:12px; }
+h1 { font-size:22px; font-weight:700; color:#1e293b; margin:0 0 2px; }
 .subtitle { font-size:13px; color:#64748b; margin:0; }
-.header-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.role-tabs { display:flex; gap:6px; flex-wrap:wrap; }
-.role-tab { padding:8px 16px; border:2px solid #e2e8f0; border-radius:20px; background:#fff;
-  font-size:13px; font-weight:600; color:#64748b; cursor:pointer; transition:all .15s; }
-.role-tab:hover { border-color:#8392ab; }
-.role-tab.active { font-weight:700; }
-
-.info-banner { display:flex; align-items:center; gap:10px; background:#eff6ff; border:1px solid #bfdbfe;
-  border-radius:8px; padding:12px 16px; font-size:13px; color:#1d4ed8; margin-bottom:14px; }
-
-.success-bar { background:#dcfce7; border:1px solid #bbf7d0; color:#15803d; border-radius:8px;
-  padding:10px 16px; font-size:13px; margin-bottom:12px; }
-.error-bar { background:#fee2e2; border:1px solid #fecaca; color:#dc2626; border-radius:8px;
-  padding:10px 16px; font-size:13px; margin-bottom:12px; }
-
-.table-card { background:#fff; border-radius:14px; border:1px solid #e2e8f0;
-  box-shadow:0 1px 4px rgba(0,0,0,.05); overflow:hidden; }
-
-.table-toolbar { display:flex; justify-content:space-between; align-items:center;
-  padding:14px 20px; border-bottom:1px solid #f1f5f9; gap:12px; flex-wrap:wrap; }
-.search-input { padding:9px 14px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px;
-  width:260px; outline:none; }
-.search-input:focus { border-color:#8392ab; }
-.bulk-btns { display:flex; gap:8px; }
-.bulk-btn { border:none; border-radius:6px; padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer; }
-.bulk-btn.green { background:#dcfce7; color:#15803d; }
-.bulk-btn.blue  { background:#dbeafe; color:#1d4ed8; }
-.bulk-btn.red   { background:#fee2e2; color:#dc2626; }
-.bulk-btn:hover { filter:brightness(.95); }
-
-/* Grid columns: checkbox | page | access | create | edit | delete | quick */
-.perm-header, .perm-row {
-  display:grid;
-  grid-template-columns: 52px 1fr 100px 100px 100px 100px 180px;
-  align-items:center; gap:0;
-}
-.perm-header { background:#f8fafc; border-bottom:2px solid #e2e8f0;
-  padding:10px 20px; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.5px; }
-.sub { font-size:10px; color:#94a3b8; font-weight:400; text-transform:none; letter-spacing:0; margin-top:2px; }
-.col-check { display:flex; justify-content:center; }
-.col-check input { width:17px; height:17px; accent-color:#171a35; cursor:pointer; }
-.col-page { display:flex; align-items:center; gap:12px; padding:12px 16px 12px 0; }
-.col-perm { padding:12px 0; }
-.col-quick { padding:12px 0 12px 8px; }
-.center { text-align:center; }
-
-.section-row { background:#f1f5f9; padding:8px 20px; font-size:11px; font-weight:700;
-  color:#64748b; text-transform:uppercase; letter-spacing:.8px; border-bottom:1px solid #e2e8f0; }
-
-.perm-row { padding:0 20px; border-bottom:1px solid #f8fafc; transition:background .1s; }
+.header-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.role-label { font-size:13px; color:#64748b; }
+.role-select { padding:8px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; background:#fff; outline:none; cursor:pointer; min-width:180px; }
+.role-select:focus { border-color:#8392ab; }
+.btn-save { background:#171a35; color:#fff; border:none; padding:10px 22px; border-radius:8px; font-size:13.5px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:7px; }
+.btn-save:hover:not(:disabled) { background:#12335d; }
+.btn-save:disabled { opacity:.6; cursor:not-allowed; }
+.spinner { width:14px; height:14px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.info-banner { background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:11px 16px; font-size:13px; color:#1d4ed8; margin-bottom:14px; }
+.success-bar { background:#dcfce7; border:1px solid #bbf7d0; color:#15803d; border-radius:8px; padding:10px 16px; font-size:13px; margin-bottom:12px; }
+.error-bar { background:#fee2e2; border:1px solid #fecaca; color:#dc2626; border-radius:8px; padding:10px 16px; font-size:13px; margin-bottom:12px; }
+.table-card { background:#fff; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,.05); overflow:hidden; }
+.perm-table { width:100%; border-collapse:collapse; }
+thead tr { background:#f8f9fa; border-bottom:2px solid #e2e8f0; }
+thead th { padding:12px 10px; font-size:12px; font-weight:700; color:#374151; text-align:center; white-space:nowrap; }
+.th-check { width:52px; }
+.th-page  { text-align:left !important; padding-left:14px !important; min-width:220px; }
+.th-perm  { width:100px; }
+.th-quick { width:200px; }
+.sub { font-size:10px; color:#94a3b8; font-weight:400; display:block; margin-top:2px; }
+.section-row td { background:#f1f5f9; padding:7px 14px; font-size:11px; font-weight:700; color:#64748b; letter-spacing:.9px; text-transform:uppercase; border-top:1px solid #e2e8f0; }
+.perm-row { border-bottom:1px solid #f1f5f9; transition:background .1s; }
 .perm-row:hover { background:#fafafa; }
-.perm-row.dimmed { opacity:.55; }
-
-.page-icon-wrap { width:38px; height:38px; background:#f1f5f9; border-radius:8px;
-  display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-.page-label { font-size:13.5px; font-weight:600; color:#1e293b; margin-bottom:2px; }
-.page-section-tag { font-size:11px; color:#94a3b8; }
-
+.perm-row.no-access { opacity:.55; }
+.td-check { text-align:center; padding:10px; width:52px; }
+.td-check input { width:17px; height:17px; accent-color:#3b82f6; cursor:pointer; }
+.td-page { padding:12px 14px; display:flex; align-items:center; gap:12px; }
+.td-page.muted strong { color:#94a3b8; }
+.page-icon { font-size:18px; width:34px; height:34px; background:#f1f5f9; border-radius:7px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.td-page strong { font-size:13.5px; color:#1e293b; }
+.td-cb { text-align:center; padding:10px; width:100px; }
 .cb { width:17px; height:17px; cursor:pointer; }
 .cb.access { accent-color:#171a35; }
 .cb.create { accent-color:#16a34a; }
 .cb.edit   { accent-color:#d97706; }
 .cb.delete { accent-color:#dc2626; }
-.cb:disabled { cursor:not-allowed; opacity:.4; }
-
-.quick-btns { display:flex; gap:5px; justify-content:center; }
-.qb { border:none; border-radius:12px; padding:4px 12px; font-size:11px; font-weight:600; cursor:pointer; transition:all .15s; }
-.qb.all  { background:#f0fdf4; color:#15803d; }
-.qb.view { background:#eff6ff; color:#1d4ed8; }
-.qb.none { background:#f8fafc; color:#64748b; }
-.qb.all.active  { background:#dcfce7; color:#15803d; }
-.qb.view.active { background:#dbeafe; color:#1d4ed8; }
-.qb.none.active { background:#e2e8f0; color:#374151; }
-.qb:hover { filter:brightness(.95); }
-
-.table-footer { display:flex; justify-content:space-between; align-items:center;
-  padding:14px 20px; background:#f8fafc; border-top:2px solid #e2e8f0; }
-.summary { font-size:13px; color:#374151; }
-.btn-save { background:#171a35; color:#fff; border:none; padding:11px 24px; border-radius:8px;
-  font-size:13.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; }
-.btn-save:hover:not(:disabled) { background:#12335d; }
-.btn-save:disabled { opacity:.6; cursor:not-allowed; }
-.spinner { width:14px; height:14px; border:2px solid rgba(255,255,255,.3);
-  border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
+.cb:disabled { cursor:not-allowed; opacity:.35; }
+.td-quick { text-align:center; padding:8px; width:200px; }
+.qb { border:none; border-radius:14px; padding:4px 14px; font-size:11.5px; font-weight:600; cursor:pointer; margin:0 2px; transition:all .12s; }
+.qb.all  { background:#e8f8ef; color:#1a7a45; }
+.qb.view { background:#fde8e8; color:#c0392b; }
+.qb.none { background:#f1f3f5; color:#6b7280; }
+.qb.all.active  { background:#bbf7d0; color:#14532d; font-weight:700; }
+.qb.view.active { background:#fecaca; color:#991b1b; font-weight:700; }
+.qb.none.active { background:#e2e8f0; color:#374151; font-weight:700; }
+.qb:hover { filter:brightness(.93); }
+tfoot tr { background:#f8f9fa; border-top:2px solid #e2e8f0; }
+.footer-summary { padding:12px 14px; font-size:13px; color:#374151; }
+.footer-bulk { padding:12px 14px; text-align:right; }
+.bulk-btn { border:none; border-radius:6px; padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer; margin-left:6px; }
+.bulk-btn.all  { background:#dcfce7; color:#15803d; }
+.bulk-btn.view { background:#dbeafe; color:#1d4ed8; }
+.bulk-btn.none { background:#fee2e2; color:#dc2626; }
+.bulk-btn:hover { filter:brightness(.95); }
+.bottom-bar { margin-top:16px; display:flex; justify-content:flex-end; }
   `]
 })
 export class RolePermissionsComponent implements OnInit {
@@ -274,25 +217,22 @@ export class RolePermissionsComponent implements OnInit {
   sections = SECTIONS;
   selectedRole = 'SupportManager';
   perms: Record<string, { canAccess:boolean; canCreate:boolean; canEdit:boolean; canDelete:boolean }> = {};
-  search = '';
   saving = false;
   successMsg = '';
   errorMsg = '';
 
   constructor(private api: ApiService) {}
 
-  ngOnInit() { this.selectRole('SupportManager'); }
+  ngOnInit() { this.loadPerms(); }
 
-  selectRole(role: string) {
-    this.selectedRole = role;
+  loadPerms() {
     this.successMsg = ''; this.errorMsg = '';
-    // Init with all false
     this.perms = {};
     this.pages.forEach(p => this.perms[p.key] = { canAccess:false, canCreate:false, canEdit:false, canDelete:false });
-    this.api.getRolePermissions(role).subscribe({
+    this.api.getRolePermissions(this.selectedRole).subscribe({
       next: (data: any[]) => {
         data.forEach((d: any) => {
-          if (this.perms[d.pageKey]) {
+          if (this.perms[d.pageKey] !== undefined) {
             this.perms[d.pageKey] = { canAccess: d.canAccess, canCreate: d.canCreate, canEdit: d.canEdit, canDelete: d.canDelete };
           }
         });
@@ -302,13 +242,12 @@ export class RolePermissionsComponent implements OnInit {
   }
 
   get currentRoleLabel() { return this.roles.find(r => r.key === this.selectedRole)?.label ?? ''; }
-
   perm(key: string) { return this.perms[key] ?? { canAccess:false, canCreate:false, canEdit:false, canDelete:false }; }
+  pagesBySection(s: string) { return this.pages.filter(p => p.section === s); }
 
-  filteredPages(section: string) {
-    const q = this.search.toLowerCase();
-    return this.pages.filter(p => p.section === section &&
-      (!q || p.label.toLowerCase().includes(q) || p.key.includes(q)));
+  hasAnyAccess(key: string) {
+    const p = this.perm(key);
+    return p.canAccess || p.canCreate || p.canEdit || p.canDelete;
   }
 
   onAccessChange(key: string) {
@@ -320,24 +259,23 @@ export class RolePermissionsComponent implements OnInit {
   }
 
   onActionChange(key: string) {
-    // If any action is ticked, ensure access is on
     const p = this.perms[key];
     if (p.canCreate || p.canEdit || p.canDelete) p.canAccess = true;
   }
 
+  toggleRowAny(key: string, e: Event) {
+    const checked = (e.target as HTMLInputElement).checked;
+    this.setRow(key, checked ? 'view' : 'none');
+  }
+
   setRow(key: string, mode: 'full'|'view'|'none') {
-    const p = this.perms[key];
-    if (mode === 'full')  { p.canAccess=true;  p.canCreate=true;  p.canEdit=true;  p.canDelete=true; }
-    if (mode === 'view')  { p.canAccess=true;  p.canCreate=false; p.canEdit=false; p.canDelete=false; }
-    if (mode === 'none')  { p.canAccess=false; p.canCreate=false; p.canEdit=false; p.canDelete=false; }
+    const p = this.perms[key]; if (!p) return;
+    if (mode === 'full') { p.canAccess=true;  p.canCreate=true;  p.canEdit=true;  p.canDelete=true; }
+    if (mode === 'view') { p.canAccess=true;  p.canCreate=false; p.canEdit=false; p.canDelete=false; }
+    if (mode === 'none') { p.canAccess=false; p.canCreate=false; p.canEdit=false; p.canDelete=false; }
   }
 
   setAll(mode: 'full'|'view'|'none') { this.pages.forEach(p => this.setRow(p.key, mode)); }
-
-  toggleRowFull(key: string, e: Event) {
-    const checked = (e.target as HTMLInputElement).checked;
-    this.setRow(key, checked ? 'full' : 'none');
-  }
 
   toggleAll(e: Event) {
     const checked = (e.target as HTMLInputElement).checked;
@@ -346,8 +284,8 @@ export class RolePermissionsComponent implements OnInit {
 
   isFullAccess(key: string) { const p = this.perm(key); return p.canAccess && p.canCreate && p.canEdit && p.canDelete; }
   isViewOnly(key: string)   { const p = this.perm(key); return p.canAccess && !p.canCreate && !p.canEdit && !p.canDelete; }
-  isNoAccess(key: string)   { const p = this.perm(key); return !p.canAccess && !p.canCreate && !p.canEdit && !p.canDelete; }
-  allFullAccess()           { return this.pages.every(p => this.isFullAccess(p.key)); }
+  isNoAccess(key: string)   { return !this.hasAnyAccess(key); }
+  allChecked()              { return this.pages.every(p => this.isFullAccess(p.key)); }
   accessCount()             { return this.pages.filter(p => this.perm(p.key).canAccess).length; }
 
   save() {
