@@ -32,6 +32,7 @@ const TRANSITIONS: Record<string,string[]> = {
       <div class="header-badges">
         <span class="badge badge-status">{{ ticket.status }}</span>
         <span class="badge" [ngClass]="'p-'+ticket.priority.toLowerCase()">{{ ticket.priority }}</span>
+        <span class="badge sev-badge" [ngClass]="'sev-'+(ticket.severity||'medium').toLowerCase()">⚡ {{ ticket.severity || 'Medium' }}</span>
         <span class="badge badge-type">{{ ticket.type }}</span>
       </div>
     </div>
@@ -189,6 +190,11 @@ h1 { font-size:20px; font-weight:700; color:#1e293b; margin:0 0 10px; }
 .badge-type   { background:#f0fdf4; color:#15803d; }
 .p-critical   { background:#fee2e2; color:#dc2626; }
 .p-high       { background:#fef3c7; color:#d97706; }
+.sev-badge    { font-size:11.5px; }
+.sev-critical { background:#fee2e2; color:#dc2626; }
+.sev-major    { background:#fef3c7; color:#d97706; }
+.sev-medium   { background:#fefce8; color:#ca8a04; }
+.sev-minor    { background:#f1f5f9; color:#64748b; }
 .p-medium     { background:#e0f2fe; color:#0369a1; }
 .p-low        { background:#f1f5f9; color:#64748b; }
 .tabs { display:flex; gap:0; border-bottom:2px solid #e2e8f0; margin-bottom:20px; }

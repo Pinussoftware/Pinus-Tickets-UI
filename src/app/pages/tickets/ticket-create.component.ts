@@ -84,6 +84,15 @@ import { Customer, AppModel, PRIORITIES, TYPES } from '../../models/models';
             </select>
           </div>
           <div class="field">
+            <label>Severity <span class="req">*</span></label>
+            <select [(ngModel)]="form.severity" name="severity">
+              <option value="Critical">🔴 Critical — System down / Data loss</option>
+              <option value="Major">🟠 Major — Core function broken</option>
+              <option value="Medium">🟡 Medium — Feature impaired</option>
+              <option value="Minor">⚪ Minor — Cosmetic / minor issue</option>
+            </select>
+          </div>
+          <div class="field">
             <label>Impact</label>
             <select [(ngModel)]="form.impact" name="impact">
               <option value="">— Select —</option>
@@ -343,7 +352,7 @@ export class TicketCreateComponent implements OnInit {
   pendingFiles: { file: File; preview: string | null; status: 'pending'|'uploading'|'done'|'error' }[] = [];
 
   form: any = { customerId:'', applicationId:'', environment:'', type:'Bug',
-    priority:'Medium', impact:'', category:'', subject:'', description:'',
+    priority:'Medium', severity:'Medium', impact:'', category:'', subject:'', description:'',
     reproductionSteps:'', expectedResult:'', actualResult:'' };
 
   constructor(private api: ApiService, private router: Router) {}

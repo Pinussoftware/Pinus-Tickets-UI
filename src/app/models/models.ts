@@ -9,7 +9,7 @@ export interface LoginResponse {
 export interface TicketListItem {
   id: number; ticketNo: string; subject: string;
   customerName: string; applicationName?: string;
-  type: string; priority: string; status: string;
+  type: string; priority: string; severity: string; status: string;
   assigneeName?: string; slaDueAt?: string; updatedAt?: string;
 }
 
