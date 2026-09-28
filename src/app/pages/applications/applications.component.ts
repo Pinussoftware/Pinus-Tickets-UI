@@ -212,29 +212,20 @@ import { AuthService } from '../../services/auth.service';
           </div>
         </div>
         <div class="field full">
-          <label>Technology & Database <span class="req">*</span></label>
-          <div class="tech-picker">
-            <div class="tech-groups">
-              <div class="tech-group" *ngFor="let cat of ['Technology','Database']">
-                <div class="tech-group-label">{{ cat === 'Technology' ? '⚙️ Technology Stack' : '🗄 Database' }}</div>
-                <div class="tech-chips">
-                  <button type="button" *ngFor="let t of techsByCategory(cat)"
-                          class="tech-chip"
-                          [class.selected]="isSelected(t.name)"
-                          (click)="toggleTech(t.name)">
-                    {{ t.icon }} {{ t.name }}
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="selected-summary" *ngIf="form.technologies.length">
-              <span>Selected:</span>
-              <span class="sel-chip" *ngFor="let s of form.technologies">
-                {{ s }} <button (click)="toggleTech(s)">✕</button>
-              </span>
-            </div>
-            <div class="tech-empty" *ngIf="!form.technologies.length">Click to select technologies and databases</div>
-          </div>
+          <label>Technology & Database</label>
+          <select multiple [(ngModel)]="form.technologies" class="multi-select">
+            <optgroup label="⚙️ Technology Stack">
+              <option *ngFor="let t of techsByCategory('Technology')" [value]="t.name">
+                {{ t.icon }} {{ t.name }}
+              </option>
+            </optgroup>
+            <optgroup label="🗄 Database">
+              <option *ngFor="let t of techsByCategory('Database')" [value]="t.name">
+                {{ t.icon }} {{ t.name }}
+              </option>
+            </optgroup>
+          </select>
+          <span class="field-hint">Hold Ctrl (Windows) or ⌘ (Mac) to select multiple</span>
         </div>
         <div class="field full">
           <label>Description</label>
@@ -470,6 +461,10 @@ td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #
   display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; }
 .sel-chip button { background:none; border:none; cursor:pointer; color:#7c3aed; font-size:12px; padding:0; line-height:1; }
 .tech-empty { font-size:12.5px; color:#94a3b8; margin-top:8px; }
+.multi-select { height:160px; padding:4px; }
+.multi-select option { padding:6px 10px; border-radius:4px; font-size:13px; }
+.multi-select option:checked { background:#171a35; color:#fff; }
+.field-hint { font-size:11.5px; color:#94a3b8; margin-top:4px; }
 .type-btns { display:flex; flex-wrap:wrap; gap:8px; margin-top:2px; }
 .type-btn { padding:7px 16px; border:1.5px solid #e2e8f0; border-radius:20px; background:#fff;
   font-size:13px; cursor:pointer; color:#374151; transition:all .15s; font-family:inherit; }
