@@ -83,5 +83,6 @@ export const STATUSES = [
   'Resolved','Closed','Reopened'
 ];
 export const PRIORITIES = ['Critical','High','Medium','Low'];
-export const TYPES      = ['Bug','Feature','Support','Change'];
+export const TYPES      = ['Incident','Task','Enhancement','Defect'];
+export const TYPE_ICONS: Record<string,string> = { Incident:'🔥', Task:'📋', Enhancement:'✨', Defect:'🐛' };
 export const ROLES      = ['Admin','SupportManager','SupportExecutive','Developer','QA','CustomerAdmin','CustomerUser','Management'];

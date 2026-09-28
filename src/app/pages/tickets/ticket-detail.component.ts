@@ -33,7 +33,7 @@ const TRANSITIONS: Record<string,string[]> = {
         <span class="badge badge-status">{{ ticket.status }}</span>
         <span class="badge" [ngClass]="'p-'+ticket.priority.toLowerCase()">{{ ticket.priority }}</span>
         <span class="badge sev-badge" [ngClass]="'sev-'+(ticket.severity||'medium').toLowerCase()">⚡ {{ ticket.severity || 'Medium' }}</span>
-        <span class="badge badge-type">{{ ticket.type }}</span>
+        <span class="badge badge-type">{{ typeIcon(ticket.type) }} {{ ticket.type }}</span>
       </div>
     </div>
     <div class="header-actions" *ngIf="allowedNext.length > 0">
@@ -352,6 +352,11 @@ export class TicketDetailComponent implements OnInit {
     this.api.transitionTicket(this.ticket.id, { newStatus: this.nextStatus }).subscribe(
       t => { this.ticket = t; this.nextStatus = ''; }
     );
+  }
+
+  typeIcon(type: string): string {
+    const icons: Record<string,string> = { Incident:'🔥', Task:'📋', Enhancement:'✨', Defect:'🐛' };
+    return icons[type] ?? '🎫';
   }
 
   friendlyAction(action: string): string {

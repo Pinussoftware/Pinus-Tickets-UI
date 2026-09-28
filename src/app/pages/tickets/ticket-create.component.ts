@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
-import { Customer, AppModel, PRIORITIES, TYPES } from '../../models/models';
+import { Customer, AppModel, PRIORITIES, TYPES, TYPE_ICONS } from '../../models/models';
 
 @Component({
   selector: 'app-ticket-create',
@@ -72,7 +72,7 @@ import { Customer, AppModel, PRIORITIES, TYPES } from '../../models/models';
           <div class="field">
             <label>Type <span class="req">*</span></label>
             <select [(ngModel)]="form.type" name="type" required>
-              <option *ngFor="let t of types" [value]="t">{{ t }}</option>
+              <option *ngFor="let t of types" [value]="t">{{ typeIcons[t] }} {{ t }}</option>
             </select>
           </div>
           <div class="field">
@@ -345,13 +345,14 @@ export class TicketCreateComponent implements OnInit {
   envMaster: any[] = [];
   priorities = PRIORITIES;
   types = TYPES;
+  typeIcons = TYPE_ICONS;
   loading = false;
   error = '';
   submitted = false;
   dragOver = false;
   pendingFiles: { file: File; preview: string | null; status: 'pending'|'uploading'|'done'|'error' }[] = [];
 
-  form: any = { customerId:'', applicationId:'', environment:'', type:'Bug',
+  form: any = { customerId:'', applicationId:'', environment:'', type:'Incident',
     priority:'Medium', severity:'Medium', impact:'', category:'', subject:'', description:'',
     reproductionSteps:'', expectedResult:'', actualResult:'' };
 
