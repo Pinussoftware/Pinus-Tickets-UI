@@ -51,6 +51,12 @@ export class ApiService {
   updateTechnology(id: number, body: any) { return this.http.patch<any>(`${this.base}/technologies/${id}`, body); }
   deleteTechnology(id: number) { return this.http.delete<any>(`${this.base}/technologies/${id}`); }
 
+  // ── Environments ──────────────────────────────────────────────────────────
+  getEnvironments(all = false) { return this.http.get<any[]>(`${this.base}/environments${all ? '?all=true' : ''}`); }
+  createEnvironment(body: any) { return this.http.post<any>(`${this.base}/environments`, body); }
+  updateEnvironment(id: number, body: any) { return this.http.patch<any>(`${this.base}/environments/${id}`, body); }
+  deleteEnvironment(id: number) { return this.http.delete<any>(`${this.base}/environments/${id}`); }
+
   // ── Applications ──────────────────────────────────────────────────────────
   getApplications(customerId?: number) {
     const params = customerId ? { params: new HttpParams().set('customerId', customerId) } : {};

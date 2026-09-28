@@ -80,6 +80,9 @@ import { filter } from 'rxjs/operators';
         <a routerLink="/technologies" routerLinkActive="active" class="nav-item" title="Technology Master">
           <span class="nav-icon">⚙️</span><span class="nav-text" *ngIf="!collapsed">Technologies</span>
         </a>
+        <a routerLink="/environments" routerLinkActive="active" class="nav-item" title="Environment Master">
+          <span class="nav-icon">🌐</span><span class="nav-text" *ngIf="!collapsed">Environments</span>
+        </a>
       </div>
     </nav>
 

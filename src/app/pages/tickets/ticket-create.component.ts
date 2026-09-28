@@ -57,10 +57,7 @@ import { Customer, AppModel, PRIORITIES, TYPES } from '../../models/models';
             <label>Environment</label>
             <select [(ngModel)]="form.environment" name="environment">
               <option value="">— Select —</option>
-              <option>Production</option>
-              <option>UAT</option>
-              <option>Staging</option>
-              <option>Development</option>
+              <option *ngFor="let e of envMaster" [value]="e.name">{{ e.icon }} {{ e.name }}</option>
             </select>
           </div>
         </div>
@@ -336,6 +333,7 @@ h1 { font-size:22px; font-weight:700; color:#1e293b; margin:0; }
 export class TicketCreateComponent implements OnInit {
   customers: any[] = [];
   apps: any[] = [];
+  envMaster: any[] = [];
   priorities = PRIORITIES;
   types = TYPES;
   loading = false;
@@ -352,6 +350,7 @@ export class TicketCreateComponent implements OnInit {
 
   ngOnInit() {
     this.api.getCustomers().subscribe(c => this.customers = c);
+    this.api.getEnvironments().subscribe(e => this.envMaster = e);
     // Global paste listener for screenshots
     document.addEventListener('paste', this.handleGlobalPaste);
   }

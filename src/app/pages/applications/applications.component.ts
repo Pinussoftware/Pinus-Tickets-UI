@@ -236,24 +236,51 @@ import { AuthService } from '../../services/auth.service';
 
       <div class="form-section">
         <div class="sec-title"><span class="sec-num">2</span> Environments</div>
+        <!-- Context hint based on app type -->
+        <div class="env-type-hint" *ngIf="form.appType">
+          <span *ngIf="form.appType==='Web'">🌐 Web app — add URL per environment</span>
+          <span *ngIf="form.appType==='Windows'">🖥 Windows app — add server/host and installation path per environment</span>
+          <span *ngIf="form.appType==='Mobile'">📱 Mobile app — add store link and bundle ID per environment</span>
+          <span *ngIf="form.appType==='Desktop'">💻 Desktop app — add server/host per environment</span>
+          <span *ngIf="form.appType==='API'">🔌 API — add base URL and version per environment</span>
+        </div>
         <div *ngFor="let env of form.environments; let i=index" class="env-row">
           <div class="env-fields">
             <div class="field">
               <label>Environment <span class="req">*</span></label>
               <select [(ngModel)]="env.type">
-                <option>Production</option><option>UAT</option>
-                <option>Staging</option><option>Development</option>
+                <option *ngFor="let e of envMaster">{{ e.icon }} {{ e.name }}</option>
               </select>
             </div>
-            <div class="field">
-              <label>URL</label>
+            <!-- Web / API: URL -->
+            <div class="field" *ngIf="form.appType==='Web' || form.appType==='API' || !form.appType">
+              <label>{{ form.appType==='API' ? 'Base URL' : 'URL' }}</label>
               <input [(ngModel)]="env.url" placeholder="https://app.company.com" />
             </div>
-            <div class="field">
+            <!-- Windows / Desktop / Mobile: Server or Store Link -->
+            <div class="field" *ngIf="form.appType==='Windows' || form.appType==='Desktop'">
               <label>Server / Host</label>
-              <input [(ngModel)]="env.server" placeholder="prod-server-01" />
+              <input [(ngModel)]="env.server" placeholder="e.g. prod-server-01" />
             </div>
-            <div class="field">
+            <div class="field" *ngIf="form.appType==='Windows' || form.appType==='Desktop'">
+              <label>Installation Path</label>
+              <input [(ngModel)]="env.installPath" placeholder="e.g. C:\Program Files\App" />
+            </div>
+            <div class="field" *ngIf="form.appType==='Mobile'">
+              <label>Store Link</label>
+              <input [(ngModel)]="env.url" placeholder="https://play.google.com/..." />
+            </div>
+            <div class="field" *ngIf="form.appType==='Mobile'">
+              <label>Bundle ID</label>
+              <input [(ngModel)]="env.server" placeholder="com.company.app" />
+            </div>
+            <!-- API: version -->
+            <div class="field" *ngIf="form.appType==='API'">
+              <label>API Version</label>
+              <input [(ngModel)]="env.version" placeholder="v1, v2…" />
+            </div>
+            <!-- Common: version (non-API/Mobile) -->
+            <div class="field" *ngIf="form.appType!=='API' && form.appType!=='Mobile'">
               <label>Version</label>
               <input [(ngModel)]="env.version" placeholder="v2.5.1" />
             </div>
@@ -470,6 +497,8 @@ td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #
   font-size:13px; cursor:pointer; color:#374151; transition:all .15s; font-family:inherit; }
 .type-btn:hover { border-color:#8392ab; background:#f1f5f9; }
 .type-btn.active { background:#171a35; color:#fff; border-color:#171a35; font-weight:600; }
+.env-type-hint { background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 14px;
+  font-size:12.5px; color:#1d4ed8; margin-bottom:12px; }
 .env-row { display:flex; gap:10px; align-items:flex-end; background:#f8fafc; border-radius:10px; padding:12px; margin-bottom:10px; border:1px solid #f1f5f9; }
 .env-fields { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; flex:1; }
 .remove-env { background:none; border:1px solid #fecaca; color:#ef4444; border-radius:6px; padding:6px 10px; cursor:pointer; font-size:13px; flex-shrink:0; }
@@ -500,6 +529,7 @@ export class ApplicationsComponent implements OnInit {
   filtered: any[] = [];
   customers: any[] = [];
   techMaster: any[] = [];
+  envMaster: any[] = [];
   search = '';
   filterCustomer: any = '';
   filterStatus = '';
@@ -519,6 +549,7 @@ export class ApplicationsComponent implements OnInit {
   ngOnInit() {
     this.api.getCustomers().subscribe(c => this.customers = c);
     this.api.getTechnologies().subscribe(t => this.techMaster = t);
+    this.api.getEnvironments().subscribe(e => this.envMaster = e);
     this.loadApps();
   }
 
