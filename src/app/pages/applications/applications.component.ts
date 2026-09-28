@@ -193,18 +193,13 @@ import { AuthService } from '../../services/auth.service';
           </div>
           <div class="field">
             <label>Application Type <span class="req">*</span></label>
-            <div class="type-btns">
-              <button type="button" class="type-btn" [class.active]="form.appType==='Web'"
-                      (click)="form.appType='Web'">🌐 Web</button>
-              <button type="button" class="type-btn" [class.active]="form.appType==='Windows'"
-                      (click)="form.appType='Windows'">🖥 Windows</button>
-              <button type="button" class="type-btn" [class.active]="form.appType==='Mobile'"
-                      (click)="form.appType='Mobile'">📱 Mobile</button>
-              <button type="button" class="type-btn" [class.active]="form.appType==='Desktop'"
-                      (click)="form.appType='Desktop'">💻 Desktop</button>
-              <button type="button" class="type-btn" [class.active]="form.appType==='API'"
-                      (click)="form.appType='API'">🔌 API</button>
-            </div>
+            <select [(ngModel)]="form.appType">
+              <option value="Web">🌐 Web</option>
+              <option value="Windows">🖥 Windows</option>
+              <option value="Mobile">📱 Mobile</option>
+              <option value="Desktop">💻 Desktop</option>
+              <option value="API">🔌 API</option>
+            </select>
           </div>
           <div class="field">
             <label>Status</label>
