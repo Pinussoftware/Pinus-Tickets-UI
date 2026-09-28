@@ -352,6 +352,49 @@ import { Customer, AppModel } from '../../models/models';
         </div>
       </div>
     </div>
+
+    <!-- Section 5: Email Notification Config -->
+    <div class="form-section notify-section">
+      <div class="sec-title"><span class="sec-num">5</span> 📧 Email Notification Configuration</div>
+      <p class="notify-info">Configure which email addresses receive automatic notifications for this customer's tickets.</p>
+      <div class="field full" style="margin-bottom:16px">
+        <label>Notification Email Addresses</label>
+        <input [(ngModel)]="form.notifyEmails"
+               placeholder="manager@company.com, it@company.com, director@company.com" />
+        <span class="field-hint">Separate multiple emails with commas. These people receive ticket updates automatically.</span>
+      </div>
+      <div class="notify-toggle-label">Notify on these events:</div>
+      <div class="notify-checks">
+        <label class="toggle-check">
+          <input type="checkbox" [(ngModel)]="form.notifyOnCreate" />
+          <div class="toggle-info">
+            <strong>🎫 Ticket Created</strong>
+            <span>Email when a new ticket is raised</span>
+          </div>
+        </label>
+        <label class="toggle-check">
+          <input type="checkbox" [(ngModel)]="form.notifyOnStatus" />
+          <div class="toggle-info">
+            <strong>🔄 Status Changed</strong>
+            <span>Email on Closed, Reopened, Waiting for Customer</span>
+          </div>
+        </label>
+        <label class="toggle-check">
+          <input type="checkbox" [(ngModel)]="form.notifyOnAssign" />
+          <div class="toggle-info">
+            <strong>🎯 Ticket Assigned</strong>
+            <span>Email when ticket is assigned to an executive</span>
+          </div>
+        </label>
+        <label class="toggle-check">
+          <input type="checkbox" [(ngModel)]="form.notifyOnResolve" />
+          <div class="toggle-info">
+            <strong>✅ Ticket Resolved</strong>
+            <span>Email when ticket is marked resolved</span>
+          </div>
+        </label>
+      </div>
+    </div>
   </div>
 
   <!-- Sticky save bar -->
@@ -498,6 +541,17 @@ td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #
 
 /* Sticky save bar */
 .sticky-save { position:sticky; bottom:0; background:#fff; border-top:1px solid #e2e8f0;
+.notify-section { border:1.5px solid #dbeafe; background:#f0f7ff; }
+.notify-info { font-size:13px; color:#374151; margin:0 0 14px; }
+.notify-toggle-label { font-size:12px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
+.notify-checks { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.toggle-check { display:flex; align-items:flex-start; gap:10px; background:#fff; border:1.5px solid #e2e8f0; border-radius:10px; padding:12px 14px; cursor:pointer; transition:border .15s; }
+.toggle-check:hover { border-color:#8392ab; }
+.toggle-check input[type=checkbox] { width:17px; height:17px; margin-top:2px; accent-color:#171a35; flex-shrink:0; cursor:pointer; }
+.toggle-info { display:flex; flex-direction:column; gap:3px; }
+.toggle-info strong { font-size:13px; color:#1e293b; }
+.toggle-info span { font-size:12px; color:#64748b; }
+.field-hint { font-size:11.5px; color:#94a3b8; margin-top:4px; }
   padding:14px 0; margin-top:18px; display:flex; justify-content:flex-end;
   align-items:center; gap:10px; }
 .error-inline { flex:1; font-size:13px; color:#dc2626; }
@@ -651,6 +705,7 @@ export class CustomersComponent implements OnInit {
       timezone: 'Asia/Kolkata (IST +5:30)',
       businessHours: '9 AM – 6 PM (Mon–Fri)',
       maxTickets: '', notes: '',
+      notifyEmails: '', notifyOnCreate: true, notifyOnStatus: true, notifyOnAssign: false, notifyOnResolve: true,
       organizationId: 1
     };
   }
@@ -706,7 +761,12 @@ export class CustomersComponent implements OnInit {
       swiftCode: c.swiftCode || '', micrCode: c.micrCode || '', upiId: c.upiId || '',
       supportEmail: c.supportEmail || '', escalationContact: c.escalationContact || '',
       timezone: c.timezone || '', businessHours: c.businessHours || '',
-      maxTicketsPerMonth: c.maxTicketsPerMonth || '', notes: c.notes || ''
+      maxTicketsPerMonth: c.maxTicketsPerMonth || '', notes: c.notes || '',
+      notifyEmails: c.notifyEmails || '',
+      notifyOnCreate: c.notifyOnCreate ?? true,
+      notifyOnStatus: c.notifyOnStatus ?? true,
+      notifyOnAssign: c.notifyOnAssign ?? false,
+      notifyOnResolve: c.notifyOnResolve ?? true
     };
     this.editing = true; this.editId = c.id;
     this.errorMsg = ''; this.activeTab = 'General';
@@ -746,7 +806,12 @@ export class CustomersComponent implements OnInit {
       supportEmail: this.form.supportEmail, escalationContact: this.form.escalationContact,
       timezone: this.form.timezone, businessHours: this.form.businessHours,
       maxTicketsPerMonth: this.form.maxTicketsPerMonth ? +this.form.maxTicketsPerMonth : null,
-      notes: this.form.notes
+      notes: this.form.notes,
+      notifyEmails: this.form.notifyEmails || null,
+      notifyOnCreate: this.form.notifyOnCreate,
+      notifyOnStatus: this.form.notifyOnStatus,
+      notifyOnAssign: this.form.notifyOnAssign,
+      notifyOnResolve: this.form.notifyOnResolve
     };
     const obs = this.editing
       ? this.api.updateCustomer(this.editId, payload)
