@@ -77,6 +77,25 @@ import { ApiService } from '../../services/api.service';
       </div>
     </div>
     <div class="sla-section">
+      <div class="sla-section-title">🕐 Business Hours & Support Window</div>
+      <div class="bh-grid">
+        <div class="field">
+          <label>Support Window</label>
+          <select [(ngModel)]="form.supportWindow">
+            <option value="24x7">24×7 (All days, All hours)</option>
+            <option value="24x5">24×5 (Mon–Fri, All hours)</option>
+            <option value="9x5">9×5 (Mon–Fri, Business hours)</option>
+            <option value="9x6">9×6 (Mon–Sat, Business hours)</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Business Hours</label>
+          <input [(ngModel)]="form.businessHours" placeholder="e.g. 9 AM – 6 PM (Mon–Fri)" />
+        </div>
+      </div>
+    </div>
+    <div class="sla-section">
       <div class="sla-section-title">⏱ SLA Response Hours (custom per this contract)</div>
       <div class="sla-hrs-grid">
         <div class="sla-hr-field">
@@ -115,7 +134,7 @@ import { ApiService } from '../../services/api.service';
     <table>
       <thead>
         <tr><th>#</th><th>Customer</th><th>Contract No.</th><th>Plan</th>
-          <th>Start</th><th>End</th><th>SLA (C/H/M/L hrs)</th><th>Status</th><th>Actions</th></tr>
+          <th>Start</th><th>End</th><th>Support Window</th><th>Business Hours</th><th>SLA (C/H/M/L hrs)</th><th>Status</th><th>Actions</th></tr>
       </thead>
       <tbody>
         <tr *ngFor="let c of filteredContracts; let i=index">
@@ -125,6 +144,8 @@ import { ApiService } from '../../services/api.service';
           <td><span class="plan-badge" [ngClass]="c.planName.toLowerCase()">{{ c.planName }}</span></td>
           <td>{{ c.startDate | date:'dd MMM yyyy' }}</td>
           <td [class.expiring]="isExpiring(c.endDate)">{{ c.endDate | date:'dd MMM yyyy' }}</td>
+          <td><span class="sw-badge">{{ c.supportWindow || '—' }}</span></td>
+          <td class="bh-cell">{{ c.businessHours || '—' }}</td>
           <td class="sla-hrs">{{ c.responseHoursCritical }}h / {{ c.responseHoursHigh }}h / {{ c.responseHoursMedium }}h / {{ c.responseHoursLow }}h</td>
           <td><span class="status-pill" [ngClass]="c.status">{{ c.status }}</span></td>
           <td>
@@ -168,6 +189,9 @@ h1 { font-size:22px; font-weight:700; color:#1e293b; margin:0 0 4px; }
 .sla-section { background:#f8fafc; border-radius:10px; padding:14px; margin-bottom:14px; }
 .sla-section-title { font-size:12px; font-weight:700; color:#475569; margin-bottom:10px; }
 .sla-hrs-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.bh-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.bh-cell { font-size:12px; color:#374151; }
+.sw-badge { background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:10px; font-size:11.5px; font-weight:700; }
 .sla-hr-field { display:flex; flex-direction:column; gap:4px; }
 .sla-hr-field label { font-size:12px; color:#64748b; font-weight:500; }
 .sla-hr-field input { padding:7px 10px; border:1.5px solid #e2e8f0; border-radius:6px; font-size:13px; }
@@ -218,7 +242,8 @@ export class ContractsComponent implements OnInit {
   emptyForm() {
     return { customerId:'', contractNumber:'', planName:'Standard',
       startDate:'', endDate:'', status:'active',
-      responseHoursCritical:2, responseHoursHigh:4, responseHoursMedium:8, responseHoursLow:24 };
+      responseHoursCritical:2, responseHoursHigh:4, responseHoursMedium:8, responseHoursLow:24,
+      businessHours:'9 AM – 6 PM (Mon–Fri)', supportWindow:'24x5' };
   }
 
   load() {
@@ -243,7 +268,9 @@ export class ContractsComponent implements OnInit {
       responseHoursCritical: c.responseHoursCritical,
       responseHoursHigh: c.responseHoursHigh,
       responseHoursMedium: c.responseHoursMedium,
-      responseHoursLow: c.responseHoursLow
+      responseHoursLow: c.responseHoursLow,
+      businessHours: c.businessHours || '9 AM – 6 PM (Mon–Fri)',
+      supportWindow: c.supportWindow || '24x5'
     };
     this.editing = true; this.editId = c.id; this.error = ''; this.showForm = true;
   }
@@ -260,7 +287,9 @@ export class ContractsComponent implements OnInit {
       responseHoursCritical: +this.form.responseHoursCritical,
       responseHoursHigh: +this.form.responseHoursHigh,
       responseHoursMedium: +this.form.responseHoursMedium,
-      responseHoursLow: +this.form.responseHoursLow
+      responseHoursLow: +this.form.responseHoursLow,
+      businessHours: this.form.businessHours,
+      supportWindow: this.form.supportWindow
     };
     const obs = this.editing
       ? this.api.updateContract(this.editId, payload)
