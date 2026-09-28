@@ -45,6 +45,12 @@ export class ApiService {
   getRolePermissions(role: string)        { return this.http.get<any[]>(`${this.base}/role-permissions/${role}`); }
   saveRolePermissions(role: string, perms: any[]) { return this.http.post<any>(`${this.base}/role-permissions/${role}`, perms); }
 
+  // ── Technologies ──────────────────────────────────────────────────────────
+  getTechnologies(all = false) { return this.http.get<any[]>(`${this.base}/technologies${all ? '?all=true' : ''}`); }
+  createTechnology(body: any)  { return this.http.post<any>(`${this.base}/technologies`, body); }
+  updateTechnology(id: number, body: any) { return this.http.patch<any>(`${this.base}/technologies/${id}`, body); }
+  deleteTechnology(id: number) { return this.http.delete<any>(`${this.base}/technologies/${id}`); }
+
   // ── Applications ──────────────────────────────────────────────────────────
   getApplications(customerId?: number) {
     const params = customerId ? { params: new HttpParams().set('customerId', customerId) } : {};

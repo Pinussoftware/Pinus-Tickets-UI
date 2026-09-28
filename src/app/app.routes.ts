@@ -22,6 +22,7 @@ export const routes: Routes = [
       { path: 'notifications',loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent) },
       { path: 'users',            loadComponent: () => import('./pages/users/users.component').then(m => m.UsersComponent) },
       { path: 'role-permissions', loadComponent: () => import('./pages/role-permissions/role-permissions.component').then(m => m.RolePermissionsComponent) },
+      { path: 'technologies',     loadComponent: () => import('./pages/technologies/technologies.component').then(m => m.TechnologiesComponent) },
     ]
   },
   { path: '**', redirectTo: '' }

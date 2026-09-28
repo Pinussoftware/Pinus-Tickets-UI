@@ -200,33 +200,29 @@ import { AuthService } from '../../services/auth.service';
             </select>
           </div>
         </div>
-        <div class="row-3">
-          <div class="field">
-            <label>Technology Stack</label>
-            <select [(ngModel)]="form.technology" (change)="onTechChange()">
-              <option value="">— Select —</option>
-              <option>Angular + .NET</option>
-              <option>React + Node.js</option>
-              <option>Vue + Laravel</option>
-              <option>Python + Django</option>
-              <option>Java Spring Boot</option>
-              <option>SAP</option>
-              <option>Oracle</option>
-              <option>Others</option>
-            </select>
-            <input *ngIf="form.technology === 'Others'"
-                   [(ngModel)]="form.technologyOther"
-                   placeholder="Specify technology…"
-                   class="other-input" />
-          </div>
-          <div class="field">
-            <label>Database</label>
-            <select [(ngModel)]="form.database">
-              <option value="">— Select —</option>
-              <option>PostgreSQL</option><option>MySQL</option>
-              <option>SQL Server</option><option>Oracle</option>
-              <option>MongoDB</option><option>SQLite</option>
-            </select>
+        <div class="field full">
+          <label>Technology & Database <span class="req">*</span></label>
+          <div class="tech-picker">
+            <div class="tech-groups">
+              <div class="tech-group" *ngFor="let cat of ['Technology','Database']">
+                <div class="tech-group-label">{{ cat === 'Technology' ? '⚙️ Technology Stack' : '🗄 Database' }}</div>
+                <div class="tech-chips">
+                  <button type="button" *ngFor="let t of techsByCategory(cat)"
+                          class="tech-chip"
+                          [class.selected]="isSelected(t.name)"
+                          (click)="toggleTech(t.name)">
+                    {{ t.icon }} {{ t.name }}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="selected-summary" *ngIf="form.technologies.length">
+              <span>Selected:</span>
+              <span class="sel-chip" *ngFor="let s of form.technologies">
+                {{ s }} <button (click)="toggleTech(s)">✕</button>
+              </span>
+            </div>
+            <div class="tech-empty" *ngIf="!form.technologies.length">Click to select technologies and databases</div>
           </div>
         </div>
         <div class="field full">
@@ -448,6 +444,20 @@ td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #
 .field input, .field select, .field textarea { padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13.5px; font-family:'Inter',sans-serif; resize:vertical; transition:border .2s; }
 .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:#8392ab; box-shadow:0 0 0 3px rgba(131,146,171,.12); }
 .other-input { margin-top:6px; width:100%; }
+.tech-picker { border:1.5px solid #e2e8f0; border-radius:10px; padding:14px; background:#fafafa; }
+.tech-groups { display:flex; flex-direction:column; gap:14px; }
+.tech-group-label { font-size:11px; font-weight:700; color:#64748b; letter-spacing:.6px; text-transform:uppercase; margin-bottom:8px; }
+.tech-chips { display:flex; flex-wrap:wrap; gap:7px; }
+.tech-chip { padding:5px 14px; border:1.5px solid #e2e8f0; border-radius:20px; background:#fff;
+  font-size:12.5px; color:#374151; cursor:pointer; transition:all .15s; font-family:inherit; }
+.tech-chip:hover { border-color:#8392ab; background:#f1f5f9; }
+.tech-chip.selected { background:#171a35; color:#fff; border-color:#171a35; }
+.selected-summary { margin-top:12px; padding-top:10px; border-top:1px solid #e2e8f0;
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:12px; color:#64748b; }
+.sel-chip { background:#ede9fe; color:#7c3aed; border-radius:20px; padding:3px 10px;
+  display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; }
+.sel-chip button { background:none; border:none; cursor:pointer; color:#7c3aed; font-size:12px; padding:0; line-height:1; }
+.tech-empty { font-size:12.5px; color:#94a3b8; margin-top:8px; }
 .env-row { display:flex; gap:10px; align-items:flex-end; background:#f8fafc; border-radius:10px; padding:12px; margin-bottom:10px; border:1px solid #f1f5f9; }
 .env-fields { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; flex:1; }
 .remove-env { background:none; border:1px solid #fecaca; color:#ef4444; border-radius:6px; padding:6px 10px; cursor:pointer; font-size:13px; flex-shrink:0; }
@@ -477,6 +487,7 @@ export class ApplicationsComponent implements OnInit {
   all: any[] = [];
   filtered: any[] = [];
   customers: any[] = [];
+  techMaster: any[] = [];
   search = '';
   filterCustomer: any = '';
   filterStatus = '';
@@ -495,7 +506,17 @@ export class ApplicationsComponent implements OnInit {
 
   ngOnInit() {
     this.api.getCustomers().subscribe(c => this.customers = c);
+    this.api.getTechnologies().subscribe(t => this.techMaster = t);
     this.loadApps();
+  }
+
+  techsByCategory(cat: string) { return this.techMaster.filter(t => t.category === cat); }
+  isSelected(name: string)     { return this.form.technologies?.includes(name); }
+  toggleTech(name: string) {
+    if (!this.form.technologies) this.form.technologies = [];
+    const idx = this.form.technologies.indexOf(name);
+    if (idx >= 0) this.form.technologies.splice(idx, 1);
+    else this.form.technologies.push(name);
   }
 
   loadApps() {
@@ -508,6 +529,7 @@ export class ApplicationsComponent implements OnInit {
   emptyForm() {
     return {
       name: '', customerId: '', status: 'active', version: '', technology: '', technologyOther: '',
+      technologies: [] as string[],
       database: '', description: '', supportTeam: '', deploymentType: '',
       slaPriority: 'Standard', deploymentNotes: '',
       environments: [{ type: 'Production', url: '', server: '', version: '' }]
@@ -565,6 +587,9 @@ export class ApplicationsComponent implements OnInit {
     this.form = {
       name: a.name, customerId: a.customerId, status: a.status || 'active',
       version: a.version || '', technology: a.technology || '',
+      technologyOther: '',
+      // Parse comma-separated technology field back to array
+      technologies: a.technology ? a.technology.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
       database: a.databaseTech || '', description: a.description || '',
       supportTeam: a.supportTeam || '', deploymentType: a.deploymentType || '',
       slaPriority: a.slaPriority || 'Standard', deploymentNotes: a.notes || '',
@@ -586,7 +611,9 @@ export class ApplicationsComponent implements OnInit {
     this.saving = true; this.errorMsg = '';
     const payload = {
       name: this.form.name, customerId: +this.form.customerId,
-      version: this.form.version, technology: this.form.technology,
+      version: this.form.version,
+      // Join multi-select array into comma-separated string
+      technology: (this.form.technologies || []).join(', '),
       status: this.form.status, description: this.form.description,
       databaseTech: this.form.database, deploymentType: this.form.deploymentType,
       supportTeam: this.form.supportTeam, slaPriority: this.form.slaPriority,
