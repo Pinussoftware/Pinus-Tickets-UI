@@ -37,19 +37,21 @@ import { Customer, AppModel, PRIORITIES, TYPES } from '../../models/models';
         <div class="row-3">
           <div class="field">
             <label>Customer <span class="req">*</span></label>
-            <select [(ngModel)]="form.customerId" name="customerId" required (change)="loadApps(); error=''"
-                    [class.field-error]="error && !form.customerId">
+            <select [(ngModel)]="form.customerId" name="customerId" required (change)="loadApps(); submitted=false"
+                    [class.field-error]="submitted && !form.customerId">
               <option value="">— Select customer —</option>
               <option *ngFor="let c of customers" [value]="c.id">{{ c.name }}</option>
             </select>
-            <span class="field-err-msg" *ngIf="error && !form.customerId">{{ error }}</span>
+            <span class="field-err-msg" *ngIf="submitted && !form.customerId">⚠ Please select a Customer</span>
           </div>
           <div class="field">
-            <label>Application</label>
-            <select [(ngModel)]="form.applicationId" name="applicationId" [disabled]="!form.customerId">
+            <label>Application <span class="req">*</span></label>
+            <select [(ngModel)]="form.applicationId" name="applicationId" [disabled]="!form.customerId"
+                    [class.field-error]="submitted && !form.applicationId">
               <option value="">— None —</option>
               <option *ngFor="let a of apps" [value]="a.id">{{ a.name }}</option>
             </select>
+            <span class="field-err-msg" *ngIf="submitted && !form.applicationId">⚠ Please select an Application</span>
           </div>
           <div class="field">
             <label>Environment</label>
@@ -115,12 +117,16 @@ import { Customer, AppModel, PRIORITIES, TYPES } from '../../models/models';
         <div class="field">
           <label>Subject <span class="req">*</span></label>
           <input [(ngModel)]="form.subject" name="subject" required
-                 placeholder="Brief, clear description of the issue" class="subj-input" />
+                 placeholder="Brief, clear description of the issue" class="subj-input"
+                 [class.field-error]="submitted && !form.subject?.trim()" />
+          <span class="field-err-msg" *ngIf="submitted && !form.subject?.trim()">⚠ Subject is required</span>
         </div>
         <div class="field">
           <label>Description <span class="req">*</span></label>
           <textarea [(ngModel)]="form.description" name="description" required rows="5"
-                    placeholder="Provide a detailed description of the issue…"></textarea>
+                    placeholder="Provide a detailed description of the issue…"
+                    [class.field-error]="submitted && !form.description?.trim()"></textarea>
+          <span class="field-err-msg" *ngIf="submitted && !form.description?.trim()">⚠ Description is required</span>
         </div>
         <div class="row-2">
           <div class="field">
@@ -334,6 +340,7 @@ export class TicketCreateComponent implements OnInit {
   types = TYPES;
   loading = false;
   error = '';
+  submitted = false;
   dragOver = false;
   pendingFiles: { file: File; preview: string | null; status: 'pending'|'uploading'|'done'|'error' }[] = [];
 
@@ -413,14 +420,12 @@ export class TicketCreateComponent implements OnInit {
   }
 
   submit() {
-    if (!this.form.customerId || !this.form.applicationId || !this.form.subject?.trim() || !this.form.description?.trim()) {
-      this.error = !this.form.customerId
-        ? 'Please select a Customer.'
-        : !this.form.applicationId ? 'Please select an Application.'
-        : !this.form.subject?.trim() ? 'Subject is required.' : 'Description is required.';
-      return;
+    this.submitted = true;
+    if (!this.form.customerId || !this.form.applicationId ||
+        !this.form.subject?.trim() || !this.form.description?.trim()) {
+      return; // inline errors show per-field
     }
-    this.loading = true; this.error = '';
+    this.loading = true; this.error = ''; this.submitted = false;
     const payload = { ...this.form, customerId:+this.form.customerId,
       applicationId: this.form.applicationId ? +this.form.applicationId : null };
     this.api.createTicket(payload).subscribe({
