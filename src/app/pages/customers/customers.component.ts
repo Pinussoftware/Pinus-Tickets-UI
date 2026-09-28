@@ -18,7 +18,7 @@ import { Customer, AppModel } from '../../models/models';
     </div>
     <div class="header-btns">
       <button class="btn-erp-sync" (click)="openErpSync()">🔄 Sync from ERP</button>
-      <button class="btn-primary" (click)="openNew()">+ Add Customer</button>
+      <button class="btn-primary" (click)="openNew()">+ Customer OnBoarding</button>
     </div>
   </div>
 

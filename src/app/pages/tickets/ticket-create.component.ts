@@ -413,9 +413,10 @@ export class TicketCreateComponent implements OnInit {
   }
 
   submit() {
-    if (!this.form.customerId || !this.form.subject?.trim() || !this.form.description?.trim()) {
+    if (!this.form.customerId || !this.form.applicationId || !this.form.subject?.trim() || !this.form.description?.trim()) {
       this.error = !this.form.customerId
         ? 'Please select a Customer.'
+        : !this.form.applicationId ? 'Please select an Application.'
         : !this.form.subject?.trim() ? 'Subject is required.' : 'Description is required.';
       return;
     }

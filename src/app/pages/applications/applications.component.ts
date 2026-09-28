@@ -187,6 +187,10 @@ import { AuthService } from '../../services/auth.service';
             </select>
           </div>
           <div class="field">
+            <label>Version</label>
+            <input [(ngModel)]="form.version" placeholder="e.g. 2.5.1" />
+          </div>
+          <div class="field">
             <label>Status</label>
             <select [(ngModel)]="form.status">
               <option value="active">Active</option>
@@ -198,12 +202,8 @@ import { AuthService } from '../../services/auth.service';
         </div>
         <div class="row-3">
           <div class="field">
-            <label>Version</label>
-            <input [(ngModel)]="form.version" placeholder="e.g. 2.5.1" />
-          </div>
-          <div class="field">
             <label>Technology Stack</label>
-            <select [(ngModel)]="form.technology">
+            <select [(ngModel)]="form.technology" (change)="onTechChange()">
               <option value="">— Select —</option>
               <option>Angular + .NET</option>
               <option>React + Node.js</option>
@@ -212,8 +212,12 @@ import { AuthService } from '../../services/auth.service';
               <option>Java Spring Boot</option>
               <option>SAP</option>
               <option>Oracle</option>
-              <option>Other</option>
+              <option>Others</option>
             </select>
+            <input *ngIf="form.technology === 'Others'"
+                   [(ngModel)]="form.technologyOther"
+                   placeholder="Specify technology…"
+                   class="other-input" />
           </div>
           <div class="field">
             <label>Database</label>
@@ -262,7 +266,7 @@ import { AuthService } from '../../services/auth.service';
       </div>
 
       <div class="form-section">
-        <div class="sec-title"><span class="sec-num">3</span> Support Configuration</div>
+        <div class="sec-title"><span class="sec-num">3</span> Application Owner</div>
         <div class="row-3">
           <div class="field">
             <label>Support Team</label>
@@ -443,6 +447,7 @@ td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #
 .req { color:#ef4444; }
 .field input, .field select, .field textarea { padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13.5px; font-family:'Inter',sans-serif; resize:vertical; transition:border .2s; }
 .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:#8392ab; box-shadow:0 0 0 3px rgba(131,146,171,.12); }
+.other-input { margin-top:6px; width:100%; }
 .env-row { display:flex; gap:10px; align-items:flex-end; background:#f8fafc; border-radius:10px; padding:12px; margin-bottom:10px; border:1px solid #f1f5f9; }
 .env-fields { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; flex:1; }
 .remove-env { background:none; border:1px solid #fecaca; color:#ef4444; border-radius:6px; padding:6px 10px; cursor:pointer; font-size:13px; flex-shrink:0; }
@@ -502,7 +507,7 @@ export class ApplicationsComponent implements OnInit {
 
   emptyForm() {
     return {
-      name: '', customerId: '', status: 'active', version: '', technology: '',
+      name: '', customerId: '', status: 'active', version: '', technology: '', technologyOther: '',
       database: '', description: '', supportTeam: '', deploymentType: '',
       slaPriority: 'Standard', deploymentNotes: '',
       environments: [{ type: 'Production', url: '', server: '', version: '' }]
@@ -533,6 +538,10 @@ export class ApplicationsComponent implements OnInit {
   get paged()           { return this.filtered.slice((this.page-1)*this.pageSize, this.page*this.pageSize); }
 
   customerName(id: any) { return this.customers.find(c => c.id == id)?.name || ''; }
+
+  onTechChange() {
+    if (this.form.technology !== 'Others') this.form.technologyOther = '';
+  }
 
   appIcon(tech?: string): string {
     if (!tech) return '💻';

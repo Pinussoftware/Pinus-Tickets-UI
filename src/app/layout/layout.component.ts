@@ -131,6 +131,7 @@ import { filter } from 'rxjs/operators';
     <main class="content">
       <router-outlet />
     </main>
+    <footer class="app-footer">© {{ year }} Pinus Software Solutions Pvt. Ltd. All rights reserved.</footer>
   </div>
 </div>
   `,
@@ -211,6 +212,8 @@ import { filter } from 'rxjs/operators';
 .content { flex:1; overflow-y:auto; }
 .content::-webkit-scrollbar { width:6px; }
 .content::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
+.app-footer { padding:8px 24px; font-size:11px; color:#94a3b8; background:#fff;
+  border-top:1px solid #f1f5f9; text-align:center; flex-shrink:0; }
   `]
 })
 export class LayoutComponent implements OnInit {
@@ -267,6 +270,7 @@ export class LayoutComponent implements OnInit {
   }
 
   get user()    { return this.auth.currentUser; }
+  get year()    { return new Date().getFullYear(); }
   get isAdmin() { return ['Admin', 'SupportManager'].includes(this.auth.role); }
   get initials() {
     const n = this.auth.currentUser?.name || 'U';

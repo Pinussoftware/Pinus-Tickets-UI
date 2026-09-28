@@ -155,8 +155,12 @@ const TRANSITIONS: Record<string,string[]> = {
         <div class="tl-dot"></div>
         <div class="tl-body">
           <span class="tl-actor">{{ h.actorName }}</span>
-          <span class="tl-action">{{ h.action }}</span>
-          <span *ngIf="h.oldValue && h.newValue" class="tl-change">
+          <span class="tl-action">{{ friendlyAction(h.action) }}</span>
+          <span *ngIf="h.action === 'assigned' && h.newValue" class="tl-change">
+            Assigned to <strong>{{ h.newValue }}</strong>
+            <span *ngIf="h.oldValue && h.oldValue !== 'Unassigned'"> (was {{ h.oldValue }})</span>
+          </span>
+          <span *ngIf="h.action !== 'assigned' && h.oldValue && h.newValue" class="tl-change">
             {{ h.oldValue }} → {{ h.newValue }}
           </span>
           <span *ngIf="h.note" class="tl-note">{{ h.note }}</span>
@@ -324,7 +328,12 @@ export class TicketDetailComponent implements OnInit {
   }
 
   loadTicket(id: number) {
-    this.api.getTicket(id).subscribe(t => { this.ticket = t; this.nextStatus = ''; });
+    this.api.getTicket(id).subscribe(t => {
+      this.ticket = t;
+      this.nextStatus = '';
+      // Pre-select current assignee
+      this.assigneeId = t.assigneeId ?? '';
+    });
   }
 
   get allowedNext(): string[] {
@@ -339,10 +348,21 @@ export class TicketDetailComponent implements OnInit {
     );
   }
 
+  friendlyAction(action: string): string {
+    const map: Record<string,string> = {
+      created: 'Created ticket',
+      assigned: 'Assignment',
+      status_change: 'Status changed',
+      commented: 'Added comment',
+      attachment: 'Added attachment',
+    };
+    return map[action] ?? action;
+  }
+
   assign() {
     if (!this.ticket || !this.assigneeId) return;
     this.api.assignTicket(this.ticket.id, { assigneeId: +this.assigneeId }).subscribe(
-      t => { this.ticket = t; this.assigneeId = ''; }
+      t => { this.ticket = t; this.assigneeId = t.assigneeId ?? ''; }
     );
   }
 
