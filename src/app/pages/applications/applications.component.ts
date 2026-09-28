@@ -76,8 +76,9 @@ import { AuthService } from '../../services/auth.service';
         <span class="cust-av-sm">{{ a.customerName[0] }}</span>
         {{ a.customerName }}
       </div>
-      <div class="app-tech" *ngIf="a.technology">
-        <span class="tech-badge">{{ a.technology }}</span>
+      <div class="app-tech" *ngIf="a.technology || a.appType">
+        <span class="type-badge" *ngIf="a.appType">{{ typeIcon(a.appType) }} {{ a.appType }}</span>
+        <span class="tech-badge" *ngIf="a.technology">{{ a.technology }}</span>
       </div>
       <div class="app-card-footer">
         <a [routerLink]="['/tickets']" [queryParams]="{customerId: a.customerId}"
@@ -189,6 +190,21 @@ import { AuthService } from '../../services/auth.service';
           <div class="field">
             <label>Version</label>
             <input [(ngModel)]="form.version" placeholder="e.g. 2.5.1" />
+          </div>
+          <div class="field">
+            <label>Application Type <span class="req">*</span></label>
+            <div class="type-btns">
+              <button type="button" class="type-btn" [class.active]="form.appType==='Web'"
+                      (click)="form.appType='Web'">🌐 Web</button>
+              <button type="button" class="type-btn" [class.active]="form.appType==='Windows'"
+                      (click)="form.appType='Windows'">🖥 Windows</button>
+              <button type="button" class="type-btn" [class.active]="form.appType==='Mobile'"
+                      (click)="form.appType='Mobile'">📱 Mobile</button>
+              <button type="button" class="type-btn" [class.active]="form.appType==='Desktop'"
+                      (click)="form.appType='Desktop'">💻 Desktop</button>
+              <button type="button" class="type-btn" [class.active]="form.appType==='API'"
+                      (click)="form.appType='API'">🔌 API</button>
+            </div>
           </div>
           <div class="field">
             <label>Status</label>
@@ -387,6 +403,7 @@ h1 { font-size:22px; font-weight:700; color:#1e293b; margin:0 0 4px; }
 .app-cust { display:flex; align-items:center; gap:6px; font-size:12.5px; color:#475569; }
 .cust-av-sm { width:22px; height:22px; background:#e0f2fe; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#0369a1; flex-shrink:0; }
 .tech-badge { background:#ede9fe; color:#6d28d9; font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
+.type-badge { background:#dbeafe; color:#1d4ed8; font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
 .app-card-footer { display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:10px; border-top:1px solid #f1f5f9; }
 .card-link { color:#3b82f6; font-size:12px; font-weight:500; text-decoration:none; }
 .card-link:hover { text-decoration:underline; }
@@ -458,6 +475,11 @@ td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #
   display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; }
 .sel-chip button { background:none; border:none; cursor:pointer; color:#7c3aed; font-size:12px; padding:0; line-height:1; }
 .tech-empty { font-size:12.5px; color:#94a3b8; margin-top:8px; }
+.type-btns { display:flex; flex-wrap:wrap; gap:8px; margin-top:2px; }
+.type-btn { padding:7px 16px; border:1.5px solid #e2e8f0; border-radius:20px; background:#fff;
+  font-size:13px; cursor:pointer; color:#374151; transition:all .15s; font-family:inherit; }
+.type-btn:hover { border-color:#8392ab; background:#f1f5f9; }
+.type-btn.active { background:#171a35; color:#fff; border-color:#171a35; font-weight:600; }
 .env-row { display:flex; gap:10px; align-items:flex-end; background:#f8fafc; border-radius:10px; padding:12px; margin-bottom:10px; border:1px solid #f1f5f9; }
 .env-fields { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; flex:1; }
 .remove-env { background:none; border:1px solid #fecaca; color:#ef4444; border-radius:6px; padding:6px 10px; cursor:pointer; font-size:13px; flex-shrink:0; }
@@ -529,6 +551,7 @@ export class ApplicationsComponent implements OnInit {
   emptyForm() {
     return {
       name: '', customerId: '', status: 'active', version: '', technology: '', technologyOther: '',
+      appType: 'Web',
       technologies: [] as string[],
       database: '', description: '', supportTeam: '', deploymentType: '',
       slaPriority: 'Standard', deploymentNotes: '',
@@ -565,6 +588,10 @@ export class ApplicationsComponent implements OnInit {
     if (this.form.technology !== 'Others') this.form.technologyOther = '';
   }
 
+  typeIcon(t: string): string {
+    return t === 'Web' ? '🌐' : t === 'Windows' ? '🖥' : t === 'Mobile' ? '📱' : t === 'Desktop' ? '💻' : t === 'API' ? '🔌' : '📦';
+  }
+
   appIcon(tech?: string): string {
     if (!tech) return '💻';
     const t = tech.toLowerCase();
@@ -588,6 +615,7 @@ export class ApplicationsComponent implements OnInit {
       name: a.name, customerId: a.customerId, status: a.status || 'active',
       version: a.version || '', technology: a.technology || '',
       technologyOther: '',
+      appType: a.appType || 'Web',
       // Parse comma-separated technology field back to array
       technologies: a.technology ? a.technology.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
       database: a.databaseTech || '', description: a.description || '',
@@ -614,6 +642,7 @@ export class ApplicationsComponent implements OnInit {
       version: this.form.version,
       // Join multi-select array into comma-separated string
       technology: (this.form.technologies || []).join(', '),
+      appType: this.form.appType || 'Web',
       status: this.form.status, description: this.form.description,
       databaseTech: this.form.database, deploymentType: this.form.deploymentType,
       supportTeam: this.form.supportTeam, slaPriority: this.form.slaPriority,
