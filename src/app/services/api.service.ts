@@ -57,6 +57,12 @@ export class ApiService {
   updateEnvironment(id: number, body: any) { return this.http.patch<any>(`${this.base}/environments/${id}`, body); }
   deleteEnvironment(id: number) { return this.http.delete<any>(`${this.base}/environments/${id}`); }
 
+  // Customer notification contacts
+  getCustomerContacts(cid: number)              { return this.http.get<any[]>(`${this.base}/customers/${cid}/contacts`); }
+  createCustomerContact(cid: number, b: any)    { return this.http.post<any>(`${this.base}/customers/${cid}/contacts`, b); }
+  updateCustomerContact(cid: number, id: number, b: any) { return this.http.patch<any>(`${this.base}/customers/${cid}/contacts/${id}`, b); }
+  deleteCustomerContact(cid: number, id: number){ return this.http.delete<any>(`${this.base}/customers/${cid}/contacts/${id}`); }
+
   // ── Applications ──────────────────────────────────────────────────────────
   getApplications(customerId?: number) {
     const params = customerId ? { params: new HttpParams().set('customerId', customerId) } : {};

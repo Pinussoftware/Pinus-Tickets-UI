@@ -355,45 +355,103 @@ import { Customer, AppModel } from '../../models/models';
 
     <!-- Section 5: Email Notification Config -->
     <div class="form-section notify-section">
-      <div class="sec-title"><span class="sec-num">5</span> 📧 Email Notification Configuration</div>
-      <p class="notify-info">Configure which email addresses receive automatic notifications for this customer's tickets.</p>
-      <div class="field full" style="margin-bottom:16px">
-        <label>Notification Email Addresses</label>
-        <input [(ngModel)]="form.notifyEmails"
-               placeholder="manager@company.com, it@company.com, director@company.com" />
-        <span class="field-hint">Separate multiple emails with commas. These people receive ticket updates automatically.</span>
+      <div class="sec-title"><span class="sec-num">5</span> 📧 Notification Contacts</div>
+      <p class="notify-info">Add individual contacts who receive email notifications for this customer's tickets. Each contact has their own notification preferences.</p>
+
+      <!-- Contact list -->
+      <div class="contacts-table" *ngIf="contacts.length > 0">
+        <table class="ctable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role / Designation</th>
+              <th>Group</th>
+              <th style="text-align:center">🎫 New</th>
+              <th style="text-align:center">🔄 Status</th>
+              <th style="text-align:center">🎯 Assign</th>
+              <th style="text-align:center">✅ Resolve</th>
+              <th style="text-align:center">Active</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of contacts" [class.inactive-row]="!c.isActive">
+              <td><strong>{{ c.name }}</strong></td>
+              <td class="email-cell">{{ c.email }}</td>
+              <td>{{ c.roleLabel || '—' }}</td>
+              <td><span class="group-pill" *ngIf="c.groupName">{{ c.groupName }}</span><span *ngIf="!c.groupName">—</span></td>
+              <td style="text-align:center"><span [class]="c.notifyOnCreate  ? 'chk on' : 'chk off'">{{ c.notifyOnCreate  ? '✓' : '✗' }}</span></td>
+              <td style="text-align:center"><span [class]="c.notifyOnStatus  ? 'chk on' : 'chk off'">{{ c.notifyOnStatus  ? '✓' : '✗' }}</span></td>
+              <td style="text-align:center"><span [class]="c.notifyOnAssign  ? 'chk on' : 'chk off'">{{ c.notifyOnAssign  ? '✓' : '✗' }}</span></td>
+              <td style="text-align:center"><span [class]="c.notifyOnResolve ? 'chk on' : 'chk off'">{{ c.notifyOnResolve ? '✓' : '✗' }}</span></td>
+              <td style="text-align:center">
+                <span class="status-dot" [class.active]="c.isActive" [class.inactive]="!c.isActive">
+                  {{ c.isActive ? 'Active' : 'Off' }}
+                </span>
+              </td>
+              <td class="row-actions">
+                <button class="act-btn" (click)="editContact(c)" title="Edit">✏️</button>
+                <button class="act-btn del" (click)="deleteContact(c)" title="Remove">🗑</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="notify-toggle-label">Notify on these events:</div>
-      <div class="notify-checks">
-        <label class="toggle-check">
-          <input type="checkbox" [(ngModel)]="form.notifyOnCreate" />
-          <div class="toggle-info">
-            <strong>🎫 Ticket Created</strong>
-            <span>Email when a new ticket is raised</span>
-          </div>
-        </label>
-        <label class="toggle-check">
-          <input type="checkbox" [(ngModel)]="form.notifyOnStatus" />
-          <div class="toggle-info">
-            <strong>🔄 Status Changed</strong>
-            <span>Email on Closed, Reopened, Waiting for Customer</span>
-          </div>
-        </label>
-        <label class="toggle-check">
-          <input type="checkbox" [(ngModel)]="form.notifyOnAssign" />
-          <div class="toggle-info">
-            <strong>🎯 Ticket Assigned</strong>
-            <span>Email when ticket is assigned to an executive</span>
-          </div>
-        </label>
-        <label class="toggle-check">
-          <input type="checkbox" [(ngModel)]="form.notifyOnResolve" />
-          <div class="toggle-info">
-            <strong>✅ Ticket Resolved</strong>
-            <span>Email when ticket is marked resolved</span>
-          </div>
-        </label>
+      <div class="no-contacts" *ngIf="contacts.length === 0 && editId">
+        No notification contacts yet. Add one below.
       </div>
+      <div class="no-contacts" *ngIf="!editId">
+        Save the customer first, then add notification contacts.
+      </div>
+
+      <!-- Add / Edit contact inline form -->
+      <div class="contact-form" *ngIf="editId">
+        <div class="contact-form-title">{{ editingContact ? '✏️ Edit Contact' : '+ Add Contact' }}</div>
+        <div class="contact-fields">
+          <div class="field">
+            <label>Name <span class="req">*</span></label>
+            <input [(ngModel)]="cForm.name" placeholder="John Smith" />
+          </div>
+          <div class="field">
+            <label>Email <span class="req">*</span></label>
+            <input [(ngModel)]="cForm.email" type="email" placeholder="john@company.com" />
+          </div>
+          <div class="field">
+            <label>Role / Designation</label>
+            <input [(ngModel)]="cForm.roleLabel" placeholder="IT Manager" />
+          </div>
+          <div class="field">
+            <label>Group</label>
+            <select [(ngModel)]="cForm.groupName">
+              <option value="">— None —</option>
+              <option>Management</option>
+              <option>Technical</option>
+              <option>Support</option>
+              <option>Finance</option>
+              <option>Operations</option>
+            </select>
+          </div>
+        </div>
+        <div class="contact-notify-label">Notify this contact when:</div>
+        <div class="contact-notify-row">
+          <label class="cn-check"><input type="checkbox" [(ngModel)]="cForm.notifyOnCreate" /> 🎫 Ticket Created</label>
+          <label class="cn-check"><input type="checkbox" [(ngModel)]="cForm.notifyOnStatus" /> 🔄 Status Changed</label>
+          <label class="cn-check"><input type="checkbox" [(ngModel)]="cForm.notifyOnAssign" /> 🎯 Ticket Assigned</label>
+          <label class="cn-check"><input type="checkbox" [(ngModel)]="cForm.notifyOnResolve" /> ✅ Resolved</label>
+        </div>
+        <div class="contact-form-actions">
+          <button class="btn-ghost sm" (click)="cancelContact()">Cancel</button>
+          <button class="btn-primary sm" (click)="saveContact()" [disabled]="savingContact">
+            {{ savingContact ? 'Saving…' : (editingContact ? 'Update Contact' : 'Add Contact') }}
+          </button>
+        </div>
+        <div class="contact-err" *ngIf="contactErr">⚠ {{ contactErr }}</div>
+      </div>
+
+      <button class="btn-add-contact" *ngIf="editId && !showContactForm" (click)="showContactForm=true; editingContact=null; cForm=emptyCForm()">
+        + Add Notification Contact
+      </button>
     </div>
   </div>
 
@@ -543,15 +601,33 @@ td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #
 .sticky-save { position:sticky; bottom:0; background:#fff; border-top:1px solid #e2e8f0;
 .notify-section { border:1.5px solid #dbeafe; background:#f0f7ff; }
 .notify-info { font-size:13px; color:#374151; margin:0 0 14px; }
-.notify-toggle-label { font-size:12px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
-.notify-checks { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.toggle-check { display:flex; align-items:flex-start; gap:10px; background:#fff; border:1.5px solid #e2e8f0; border-radius:10px; padding:12px 14px; cursor:pointer; transition:border .15s; }
-.toggle-check:hover { border-color:#8392ab; }
-.toggle-check input[type=checkbox] { width:17px; height:17px; margin-top:2px; accent-color:#171a35; flex-shrink:0; cursor:pointer; }
-.toggle-info { display:flex; flex-direction:column; gap:3px; }
-.toggle-info strong { font-size:13px; color:#1e293b; }
-.toggle-info span { font-size:12px; color:#64748b; }
-.field-hint { font-size:11.5px; color:#94a3b8; margin-top:4px; }
+.contacts-table { overflow-x:auto; margin-bottom:14px; }
+.ctable { width:100%; border-collapse:collapse; font-size:13px; }
+.ctable th { background:#f1f5f9; font-size:11.5px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.4px; padding:8px 10px; text-align:left; border-bottom:1px solid #e2e8f0; }
+.ctable td { padding:9px 10px; border-bottom:1px solid #f1f5f9; vertical-align:middle; color:#1e293b; }
+.ctable tr:hover td { background:#f8fafc; }
+.inactive-row td { opacity:.5; }
+.email-cell { font-size:12.5px; color:#3b82f6; }
+.group-pill { background:#e0e7ff; color:#4338ca; padding:2px 8px; border-radius:12px; font-size:11.5px; font-weight:600; }
+.chk { font-size:14px; font-weight:700; }
+.chk.on { color:#16a34a; }
+.chk.off { color:#dc2626; }
+.status-dot { padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.status-dot.active { background:#dcfce7; color:#15803d; }
+.status-dot.inactive { background:#fee2e2; color:#dc2626; }
+.no-contacts { text-align:center; color:#94a3b8; font-size:13px; padding:18px 0; }
+.contact-form { background:#fff; border:1.5px solid #c7d2fe; border-radius:10px; padding:18px; margin:14px 0 10px; }
+.contact-form-title { font-size:13.5px; font-weight:700; color:#1e293b; margin-bottom:14px; }
+.contact-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+.contact-notify-label { font-size:12px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+.contact-notify-row { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:14px; }
+.cn-check { display:flex; align-items:center; gap:6px; font-size:13px; color:#374151; cursor:pointer; }
+.cn-check input { accent-color:#171a35; cursor:pointer; }
+.contact-form-actions { display:flex; gap:10px; }
+.contact-err { color:#dc2626; font-size:12.5px; margin-top:8px; }
+.btn-add-contact { margin-top:12px; padding:8px 18px; background:#171a35; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+.btn-add-contact:hover { background:#2d3561; }
+.btn-primary.sm, .btn-ghost.sm { padding:7px 16px; font-size:13px; }
   padding:14px 0; margin-top:18px; display:flex; justify-content:flex-end;
   align-items:center; gap:10px; }
 .error-inline { flex:1; font-size:13px; color:#dc2626; }
@@ -623,6 +699,46 @@ export class CustomersComponent implements OnInit {
   editId = 0;
   saving = false;
   errorMsg = '';
+
+  // Notification contacts
+  contacts: any[] = [];
+  showContactForm = false;
+  editingContact: any = null;
+  savingContact = false;
+  contactErr = '';
+  cForm: any = this.emptyCForm();
+
+  emptyCForm() {
+    return { name: '', email: '', roleLabel: '', groupName: '',
+             notifyOnCreate: true, notifyOnStatus: true, notifyOnAssign: false, notifyOnResolve: true };
+  }
+  loadContacts() {
+    if (!this.editId) return;
+    this.api.getCustomerContacts(this.editId).subscribe({ next: c => this.contacts = c, error: () => {} });
+  }
+  editContact(c: any) {
+    this.editingContact = c;
+    this.cForm = { name: c.name, email: c.email, roleLabel: c.roleLabel || '', groupName: c.groupName || '',
+                   notifyOnCreate: c.notifyOnCreate, notifyOnStatus: c.notifyOnStatus,
+                   notifyOnAssign: c.notifyOnAssign, notifyOnResolve: c.notifyOnResolve };
+    this.showContactForm = true; this.contactErr = '';
+  }
+  cancelContact() { this.showContactForm = false; this.editingContact = null; this.contactErr = ''; }
+  saveContact() {
+    if (!this.cForm.name?.trim() || !this.cForm.email?.trim()) { this.contactErr = 'Name and Email are required.'; return; }
+    this.savingContact = true; this.contactErr = '';
+    const obs = this.editingContact
+      ? this.api.updateCustomerContact(this.editId, this.editingContact.id, this.cForm)
+      : this.api.createCustomerContact(this.editId, this.cForm);
+    obs.subscribe({
+      next: () => { this.savingContact = false; this.showContactForm = false; this.editingContact = null; this.loadContacts(); },
+      error: (e: any) => { this.savingContact = false; this.contactErr = e?.error?.message || 'Save failed.'; }
+    });
+  }
+  deleteContact(c: any) {
+    if (!confirm('Remove ' + c.name + ' from notifications?')) return;
+    this.api.deleteCustomerContact(this.editId, c.id).subscribe({ next: () => this.loadContacts(), error: () => {} });
+  }
   totalApps = 0;
 
   currentPage = 1;
@@ -770,10 +886,12 @@ export class CustomersComponent implements OnInit {
     };
     this.editing = true; this.editId = c.id;
     this.errorMsg = ''; this.activeTab = 'General';
+    this.contacts = []; this.showContactForm = false; this.editingContact = null;
     this.showForm = true;
+    setTimeout(() => this.loadContacts(), 0);
   }
 
-  cancel() { this.showForm = false; this.errorMsg = ''; }
+  cancel() { this.showForm = false; this.errorMsg = ''; this.editId = 0; this.contacts = []; }
 
   deleteCustomer(c: any) {
     if (!confirm('Delete customer "' + c.name + '"?\n\nThis will also remove all linked tickets and contracts.')) return;
