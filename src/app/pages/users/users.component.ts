@@ -203,11 +203,17 @@ export class UsersComponent implements OnInit {
 
   ngOnInit() {
     this.load();
-    this.api.getCustomers().subscribe({ next: (c: any) => this.customers = c, error: () => {} });
+    this.api.getCustomers().subscribe({
+      next: (c: any) => { this.customers = c; },
+      error: (e: any) => { console.error('Customers load failed', e); }
+    });
   }
 
   load() {
-    this.api.getUsers().subscribe({ next: (u: any) => { this.users = u; this.applyFilter(); }, error: () => {} });
+    this.api.getUsers().subscribe({
+      next: (u: any) => { this.users = u; this.applyFilter(); },
+      error: (e: any) => { console.error('Users load failed', e); }
+    });
   }
 
   emptyForm() { return { name:'', email:'', password:'', phone:'', role:'SupportExecutive', status:'active', organizationId:1, customerId: null }; }
